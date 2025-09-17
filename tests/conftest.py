@@ -6,14 +6,10 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock, p@pytest.fixture
-def mock_nlp_libraries():
-    """Mock NLP libraries that might not be available."""
-    with patch('smartpaste.utils.nlp.LANGDETECT_AVAILABLE', True), patch('smartpaste.utils.nlp.ADVANCED_NLP_AVAILABLE', True), patch('langdetect.detect') as mock_detect:
-        mock_detect.return_value = 'en'
-        yield {
-            'detect': mock_detect
-        }pytest.fixture
+from unittest.mock import Mock, patch
+
+
+@pytest.fixture
 def temp_dir():
     """Create a temporary directory for testing."""
     temp_path = Path(tempfile.mkdtemp())
@@ -64,7 +60,7 @@ def sample_config():
 @pytest.fixture
 def mock_clipboard():
     """Mock clipboard functionality."""
-    with patch('pyperclip.paste') as mock_paste, \\
+    with patch('pyperclip.paste') as mock_paste, \
          patch('pyperclip.copy') as mock_copy:
         
         clipboard_content = [""]
@@ -113,47 +109,8 @@ def sample_html():
 def sample_texts():
     """Sample text content for testing."""
     return {
-        "english": """
-            This is a sample English text that contains multiple sentences and provides
-            enough content for language detection and summarization testing. The text
-            discusses various topics and should be easily recognizable as English content.
-            It includes common English words and grammatical structures that make it
-            suitable for natural language processing tasks.
-        """,
-        "german": """
-            Dies ist ein Beispieltext in deutscher Sprache, der mehrere Sätze enthält
-            und genügend Inhalt für Spracheркennung und Zusammenfassung bietet. Der Text
-            behandelt verschiedene Themen und sollte leicht als deutscher Inhalt erkennbar sein.
-        """,
-        "code": """
-            def process_data(input_data):
-                \"\"\"Process the input data and return results.\"\"\"
-                if not input_data:
-                    return None
-                
-                results = []
-                for item in input_data:
-                    processed_item = transform(item)
-                    results.append(processed_item)
-                
-                return results
-        """,
-        "email": """
-            From: john.doe@example.com
-            To: jane.smith@company.com
-            Subject: Meeting Schedule Update
-            
-            Dear Jane,
-            
-            I hope this email finds you well. I wanted to update you on the schedule
-            for our upcoming meeting. Due to unexpected circumstances, we need to
-            reschedule from Tuesday to Thursday at 2 PM.
-            
-            Please let me know if this works for your schedule.
-            
-            Best regards,
-            John
-        """,
+        "english": "This is a sample English text that contains multiple sentences and provides enough content for language detection and summarization testing. The text discusses various topics and should be easily recognizable as English content. It includes common English words and grammatical structures that make it suitable for natural language processing tasks.",
+        "code": "def process_data(input_data):\n    if not input_data:\n        return None\n    \n    results = []\n    for item in input_data:\n        processed_item = transform(item)\n        results.append(processed_item)\n    \n    return results",
         "short": "This text is too short for processing.",
         "numbers": "The temperature today is 25°C and the distance to the store is 2.5 km."
     }
@@ -180,8 +137,8 @@ def mock_requests():
 @pytest.fixture
 def mock_nlp_libraries():
     """Mock NLP libraries that might not be available."""
-    with patch('smartpaste.utils.nlp.LANGDETECT_AVAILABLE', True), \\
-         patch('smartpaste.utils.nlp.ADVANCED_NLP_AVAILABLE', True), \\
+    with patch('smartpaste.utils.nlp.LANGDETECT_AVAILABLE', True), \
+         patch('smartpaste.utils.nlp.ADVANCED_NLP_AVAILABLE', True), \
          patch('langdetect.detect') as mock_detect:
         
         mock_detect.return_value = 'en'
@@ -190,7 +147,6 @@ def mock_nlp_libraries():
         }
 
 
-# Test markers for different categories
 def pytest_configure(config):
     """Configure pytest markers."""
     config.addinivalue_line("markers", "unit: unit tests")

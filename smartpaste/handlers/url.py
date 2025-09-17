@@ -42,7 +42,7 @@ class URLHandler:
         self.request_timeout = self.config.get("request_timeout", 10)
         self.user_agent = self.config.get(
             "user_agent", 
-            "SmartPaste/0.1.0 (https://github.com/yourusername/smartpaste)"
+            "SmartPaste/0.1.0 (https://github.com/AbdHajjar/smartpaste)"
         )
         
         # Request session with retry configuration

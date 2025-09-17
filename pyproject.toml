@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "smartpaste"
-version = "0.1.0"
+version = "1.0.0"
 description = "A context-aware AI clipboard assistant that enriches content and saves organized markdown files"
 readme = "README.md"
 license = "MIT"
@@ -56,9 +56,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/smartpaste"
-Repository = "https://github.com/yourusername/smartpaste"
-Issues = "https://github.com/yourusername/smartpaste/issues"
+Homepage = "https://github.com/AbdHajjar/smartpaste"
+Repository = "https://github.com/AbdHajjar/smartpaste"
+Issues = "https://github.com/AbdHajjar/smartpaste/issues"
 
 [project.scripts]
 smartpaste = "smartpaste.main:main"
@@ -104,8 +104,3 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = [
-    "--cov=smartpaste",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-]

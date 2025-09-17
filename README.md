@@ -4,7 +4,7 @@ A context-aware AI clipboard assistant that intelligently enriches your clipboar
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
-![Status](https://img.shields.io/badge/status-alpha-orange.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
 ## 🎯 What is SmartPaste?
 
@@ -14,6 +14,9 @@ SmartPaste monitors your clipboard in the background and automatically enriches 
 - **Numbers with units** → Provides automatic conversions (°C/°F, km/miles, kg/lbs, etc.)
 - **Text content** → Detects language, creates summaries, and analyzes content
 - **Images** → Extracts text using OCR (optional)
+- **Code** → Detects programming languages and provides syntax analysis
+- **Email** → Parses email addresses and formats email content
+- **Math** → Evaluates mathematical expressions and equations
 
 All processed content is automatically saved to organized daily markdown files, making your clipboard history searchable and useful forever.
 
@@ -23,7 +26,7 @@ All processed content is automatically saved to organized daily markdown files, 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/smartpaste.git
+git clone https://github.com/AbdHajjar/smartpaste.git
 cd smartpaste
 
 # Install dependencies
@@ -143,7 +146,7 @@ text_handler:
 
 ```bash
 # Clone and install in development mode
-git clone https://github.com/yourusername/smartpaste.git
+git clone https://github.com/AbdHajjar/smartpaste.git
 cd smartpaste
 pip install -e ".[dev,ocr]"
 
@@ -324,9 +327,9 @@ A: Increase `request_timeout` in your config.yaml or check your internet connect
 
 ### Getting Help
 
-- 📧 **Issues**: [GitHub Issues](https://github.com/yourusername/smartpaste/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/smartpaste/discussions)
-- 📖 **Documentation**: [Wiki](https://github.com/yourusername/smartpaste/wiki)
+- 📧 **Issues**: [GitHub Issues](https://github.com/AbdHajjar/smartpaste/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/AbdHajjar/smartpaste/discussions)
+- 📖 **Documentation**: [Wiki](https://github.com/AbdHajjar/smartpaste/wiki)
 
 ## 📄 License
 

@@ -40,7 +40,7 @@ url_handler:
   request_timeout: 10
   
   # User agent for web requests
-  user_agent: "SmartPaste/0.1.0 (https://github.com/yourusername/smartpaste)"
+  user_agent: "SmartPaste/0.1.0 (https://github.com/AbdHajjar/smartpaste)"
 
 # Number Handler Settings
 number_handler:

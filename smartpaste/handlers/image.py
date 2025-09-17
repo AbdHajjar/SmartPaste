@@ -44,8 +44,8 @@ class ImageHandler:
             pytesseract.get_tesseract_version()
         except Exception as e:
             self.logger.error(f"Tesseract not properly installed: {e}")
-            global OCR_AVAILABLE
-            OCR_AVAILABLE = False
+            # Note: Cannot modify global OCR_AVAILABLE from instance method
+            # This will be handled gracefully in process() method
     
     def process(self, content: str) -> Optional[Dict[str, Any]]:
         """Process image content using OCR.
@@ -115,7 +115,7 @@ class ImageHandler:
                 "enriched_content": "Image (processing failed)"
             }
     
-    def _load_image(self, content: str) -> Optional[Image.Image]:
+    def _load_image(self, content: str) -> Optional[Any]:
         """Load image from various sources.
         
         Args:
@@ -124,6 +124,9 @@ class ImageHandler:
         Returns:
             PIL Image object or None if loading fails
         """
+        if not OCR_AVAILABLE:
+            return None
+            
         try:
             # Try base64 data URL format
             if content.startswith("data:image/"):
@@ -170,7 +173,7 @@ class ImageHandler:
         except Exception:
             return False
     
-    def _extract_text_from_image(self, image: Image.Image) -> Optional[Dict[str, Any]]:
+    def _extract_text_from_image(self, image: Any) -> Optional[Dict[str, Any]]:
         """Extract text from image using OCR.
         
         Args:
