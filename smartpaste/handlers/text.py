@@ -259,19 +259,19 @@ class TextHandler:
         text_lower = text.lower()
         
         # Email patterns
-        if re.search(r'from:|to:|subject:|dear\\s+\\w+', text_lower):
+        if re.search(r'from:|to:|subject:|dear\s+\w+', text_lower):
             return "email"
         
         # Code patterns
-        if re.search(r'\\b(def|class|import|function|var|const|if|else|for|while)\\b', text_lower):
+        if re.search(r'\b(def|class|import|function|var|const|if|else|for|while)\b', text_lower):
             return "code"
         
         # List patterns
-        if re.search(r'^\\s*[-*•]\\s+|^\\s*\\d+\\.\\s+', text, re.MULTILINE):
+        if re.search(r'^\s*[-*•]\s+|^\s*\d+\.\s+', text, re.MULTILINE):
             return "list"
         
         # News/article patterns
-        if re.search(r'\\b(today|yesterday|reported|according to|sources)\\b', text_lower):
+        if re.search(r'\b(today|yesterday|reported|according to|sources)\b', text_lower):
             return "news"
         
         # Question patterns
@@ -304,7 +304,7 @@ class TextHandler:
             True if email addresses are found
         """
         import re
-        email_pattern = r'\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b'
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         return bool(re.search(email_pattern, text))
     
     def _contains_phone_numbers(self, text: str) -> bool:
@@ -318,9 +318,9 @@ class TextHandler:
         """
         import re
         phone_patterns = [
-            r'\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b',  # 123-456-7890 or 123.456.7890
-            r'\\(\\d{3}\\)\\s*\\d{3}[-.]?\\d{4}',    # (123) 456-7890
-            r'\\+\\d{1,3}[-.]?\\d{3,14}',            # International format
+            r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b',  # 123-456-7890 or 123.456.7890
+            r'\(\d{3}\)\s*\d{3}[-.]?\d{4}',    # (123) 456-7890
+            r'\+\d{1,3}[-.]?\d{3,14}',            # International format
         ]
         
         for pattern in phone_patterns:

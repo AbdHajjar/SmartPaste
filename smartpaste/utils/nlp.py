@@ -60,18 +60,18 @@ class NLPUtils:
     # Common units and their patterns
     UNIT_PATTERNS = {
         'temperature': [
-            r'\\b\\d+(?:\\.\\d+)?\\s*°?\\s*[CcFfKk]\\b',
-            r'\\b\\d+(?:\\.\\d+)?\\s*(?:celsius|fahrenheit|kelvin)\\b'
+            r'(?:^|\s)-?\d+(?:\.\d+)?\s*°?\s*[CcFfKk](?:\s|$)',
+            r'(?:^|\s)-?\d+(?:\.\d+)?\s*(?:celsius|fahrenheit|kelvin)(?:\s|$)'
         ],
         'length': [
-            r'\\b\\d+(?:\\.\\d+)?\\s*(?:m|km|cm|mm|mile|miles|foot|feet|ft|inch|inches|in)\\b',
-            r'\\b\\d+(?:\\.\\d+)?\\s*(?:meter|meters|kilometer|kilometers|centimeter|centimeters)\\b'
+            r'(?:^|\s)-?\d+(?:\.\d+)?\s*(?:m|km|cm|mm|mile|miles|foot|feet|ft|inch|inches|in)(?:\s|$)',
+            r'(?:^|\s)-?\d+(?:\.\d+)?\s*(?:meter|meters|kilometer|kilometers|centimeter|centimeters)(?:\s|$)'
         ],
         'weight': [
-            r'\\b\\d+(?:\\.\\d+)?\\s*(?:kg|g|mg|lb|lbs|oz|pound|pounds|gram|grams|kilogram|kilograms|ounce|ounces)\\b'
+            r'(?:^|\s)-?\d+(?:\.\d+)?\s*(?:kg|g|mg|lb|lbs|oz|pound|pounds|gram|grams|kilogram|kilograms|ounce|ounces)(?:\s|$)'
         ],
         'volume': [
-            r'\\b\\d+(?:\\.\\d+)?\\s*(?:l|ml|gal|gallon|gallons|liter|liters|milliliter|milliliters|cup|cups)\\b'
+            r'(?:^|\s)-?\d+(?:\.\d+)?\s*(?:l|ml|gal|gallon|gallons|liter|liters|milliliter|milliliters|cup|cups)(?:\s|$)'
         ]
     }
     
@@ -291,11 +291,11 @@ class NLPUtils:
                     match_text = match.group()
                     
                     # Extract number and unit
-                    number_match = re.search(r'\\d+(?:\\.\\d+)?', match_text)
+                    number_match = re.search(r'-?\d+(?:\.\d+)?', match_text)
                     if number_match:
                         value = float(number_match.group())
                         unit = match_text.replace(number_match.group(), '').strip()
-                        unit = re.sub(r'[°\\s]+', '', unit)  # Clean unit
+                        unit = re.sub(r'[°\s]+', '', unit)  # Clean unit
                         
                         results.append({
                             'value': value,

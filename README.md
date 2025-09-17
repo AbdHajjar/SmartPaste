@@ -24,6 +24,21 @@ All processed content is automatically saved to organized daily markdown files, 
 
 ### Installation
 
+#### Option 1: Install from PyPI (Recommended)
+
+```bash
+# Install SmartPaste
+pip install smartpaste
+
+# Create configuration file
+smartpaste --help  # This will show you where to place config.yaml
+
+# Run SmartPaste
+smartpaste
+```
+
+#### Option 2: Install from Source
+
 ```bash
 # Clone the repository
 git clone https://github.com/AbdHajjar/smartpaste.git

@@ -244,10 +244,10 @@ class URLHandler:
         """
         # Remove common title suffixes
         suffixes = [
-            r'\\s*\\|\\s*.*$',  # Everything after |
-            r'\\s*-\\s*.*$',    # Everything after -
-            r'\\s*—\\s*.*$',    # Everything after em dash
-            r'\\s*::.*$',       # Everything after ::
+            r'\s*\|\s*.*$',  # Everything after |
+            r'\s*-\s*.*$',    # Everything after -
+            r'\s*—\s*.*$',    # Everything after em dash
+            r'\s*::.*$',       # Everything after ::
         ]
         
         cleaned = title
