@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#3b82f6">
+    <title>SmartPaste Mobile - Device Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .app-container {
+            max-width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #fff;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            color: #3b82f6;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 1rem;
+            padding-bottom: 80px;
+        }
+        
+        .welcome-section {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .app-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-subtitle {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .device-info {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .device-info h3 {
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .info-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .info-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 0.25rem;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .feature-tests {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .feature-tests h3 {
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .test-button {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        
+        .test-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .test-button:active {
+            transform: translateY(0);
+            background: #1d4ed8;
+        }
+        
+        .test-button.success {
+            background: #10b981;
+        }
+        
+        .test-button.error {
+            background: #ef4444;
+        }
+        
+        .test-results {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .test-results h3 {
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .result-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+        
+        .result-success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #10b981;
+        }
+        
+        .result-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .result-info {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+            min-width: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        .nav-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .qr-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 1rem auto;
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        
+        .share-url {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            word-break: break-all;
+            margin: 1rem 0;
+        }
+        
+        @media (max-width: 480px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 0.75rem;
+            }
+            
+            .welcome-section {
+                padding: 1.5rem 1rem;
+            }
+            
+            .app-icon {
+                font-size: 3rem;
+            }
+            
+            .welcome-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        .vibrate-btn {
+            background: #8b5cf6;
+        }
+        
+        .vibrate-btn:hover {
+            background: #7c3aed;
+        }
+        
+        .geolocation-btn {
+            background: #f59e0b;
+        }
+        
+        .geolocation-btn:hover {
+            background: #d97706;
+        }
+        
+        .camera-btn {
+            background: #ef4444;
+        }
+        
+        .camera-btn:hover {
+            background: #dc2626;
+        }
+        
+        .connectivity-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .status-online {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-offline {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>📋 SmartPaste Mobile Test</h1>
+        </header>
+        
+        <main class="main-content">
+            <div class="welcome-section">
+                <div class="app-icon">📱</div>
+                <h2 class="welcome-title">Device Testing Ready!</h2>
+                <p class="welcome-subtitle">Test SmartPaste Mobile features on your device</p>
+            </div>
+            
+            <div class="connectivity-status" id="connectivity-status">
+                <div class="status-indicator"></div>
+                <span id="connectivity-text">Checking connection...</span>
+            </div>
+            
+            <div class="device-info">
+                <h3>📊 Device Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-value" id="screen-width">-</div>
+                        <div class="info-label">Screen Width</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="screen-height">-</div>
+                        <div class="info-label">Screen Height</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="user-agent">-</div>
+                        <div class="info-label">Platform</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-value" id="pixel-ratio">-</div>
+                        <div class="info-label">Pixel Ratio</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-tests">
+                <h3>🧪 Feature Tests</h3>
+                <button class="test-button" onclick="testClipboard()">
+                    📋 Test Clipboard Access
+                </button>
+                <button class="test-button vibrate-btn" onclick="testVibration()">
+                    📳 Test Vibration
+                </button>
+                <button class="test-button geolocation-btn" onclick="testGeolocation()">
+                    📍 Test Geolocation
+                </button>
+                <button class="test-button camera-btn" onclick="testCamera()">
+                    📷 Test Camera Access
+                </button>
+                <button class="test-button" onclick="testNotifications()">
+                    🔔 Test Notifications
+                </button>
+                <button class="test-button" onclick="testLocalStorage()">
+                    💾 Test Local Storage
+                </button>
+            </div>
+            
+            <div class="test-results">
+                <h3>📋 Test Results</h3>
+                <div id="test-results">
+                    <div class="result-info">Ready to run tests...</div>
+                </div>
+            </div>
+            
+            <div class="qr-section">
+                <h3>📱 Share with Other Devices</h3>
+                <p>Scan this QR code or share the URL to test on multiple devices:</p>
+                <div class="qr-code" id="qr-code">
+                    📱
+                </div>
+                <div class="share-url" id="share-url">
+                    Loading URL...
+                </div>
+                <button class="test-button" onclick="shareApp()">
+                    📤 Share App URL
+                </button>
+            </div>
+        </main>
+        
+        <nav class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">🧪</div>
+                <div class="nav-label">Tests</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Results</div>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        // Device Information
+        function updateDeviceInfo() {
+            document.getElementById('screen-width').textContent = window.screen.width + 'px';
+            document.getElementById('screen-height').textContent = window.screen.height + 'px';
+            document.getElementById('pixel-ratio').textContent = window.devicePixelRatio || 1;
+            
+            const ua = navigator.userAgent;
+            let platform = 'Unknown';
+            if (ua.match(/iPhone/i)) platform = 'iPhone';
+            else if (ua.match(/iPad/i)) platform = 'iPad';
+            else if (ua.match(/Android/i)) platform = 'Android';
+            else if (ua.match(/Windows/i)) platform = 'Windows';
+            else if (ua.match(/Mac/i)) platform = 'Mac';
+            
+            document.getElementById('user-agent').textContent = platform;
+        }
+        
+        // Connectivity Status
+        function updateConnectivityStatus() {
+            const status = document.getElementById('connectivity-status');
+            const text = document.getElementById('connectivity-text');
+            
+            if (navigator.onLine) {
+                status.className = 'connectivity-status status-online';
+                text.textContent = 'Online - Ready for testing';
+            } else {
+                status.className = 'connectivity-status status-offline';
+                text.textContent = 'Offline - Limited functionality';
+            }
+        }
+        
+        // Test Results Helper
+        function addTestResult(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const resultItem = document.createElement('div');
+            resultItem.className = `result-item result-${type}`;
+            resultItem.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            results.appendChild(resultItem);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        // Feature Tests
+        async function testClipboard() {
+            try {
+                if (navigator.clipboard) {
+                    const testText = `SmartPaste Test ${Date.now()}`;
+                    await navigator.clipboard.writeText(testText);
+                    const readText = await navigator.clipboard.readText();
+                    
+                    if (readText === testText) {
+                        addTestResult('✅ Clipboard: Write and read successful', 'success');
+                    } else {
+                        addTestResult('⚠️ Clipboard: Write successful, read mismatch', 'error');
+                    }
+                } else {
+                    addTestResult('❌ Clipboard API not supported', 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Clipboard test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testVibration() {
+            try {
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                    addTestResult('✅ Vibration: Pattern triggered successfully', 'success');
+                } else {
+                    addTestResult('❌ Vibration API not supported', 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Vibration test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testGeolocation() {
+            if (navigator.geolocation) {
+                addTestResult('📍 Geolocation: Requesting position...', 'info');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        addTestResult(`✅ Geolocation: Success (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`, 'success');
+                    },
+                    (error) => {
+                        addTestResult(`❌ Geolocation: ${error.message}`, 'error');
+                    },
+                    { timeout: 10000 }
+                );
+            } else {
+                addTestResult('❌ Geolocation API not supported', 'error');
+            }
+        }
+        
+        async function testCamera() {
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    addTestResult('📷 Camera: Requesting access...', 'info');
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    addTestResult('✅ Camera: Access granted successfully', 'success');
+                    // Stop the stream immediately
+                    stream.getTracks().forEach(track => track.stop());
+                } else {
+                    addTestResult('❌ Camera API not supported', 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Camera test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testNotifications() {
+            try {
+                if ('Notification' in window) {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        new Notification('SmartPaste Test', {
+                            body: 'Notifications are working!',
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">📋</text></svg>'
+                        });
+                        addTestResult('✅ Notifications: Permission granted and sent', 'success');
+                    } else {
+                        addTestResult(`⚠️ Notifications: Permission ${permission}`, 'error');
+                    }
+                } else {
+                    addTestResult('❌ Notifications API not supported', 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Notifications test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testLocalStorage() {
+            try {
+                const testKey = 'smartpaste-test';
+                const testValue = `test-${Date.now()}`;
+                
+                localStorage.setItem(testKey, testValue);
+                const retrieved = localStorage.getItem(testKey);
+                
+                if (retrieved === testValue) {
+                    addTestResult('✅ Local Storage: Write and read successful', 'success');
+                    localStorage.removeItem(testKey);
+                } else {
+                    addTestResult('❌ Local Storage: Read mismatch', 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Local Storage test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Share functionality
+        async function shareApp() {
+            const url = window.location.href;
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'SmartPaste Mobile Test',
+                        text: 'Test SmartPaste Mobile features on your device',
+                        url: url
+                    });
+                    addTestResult('✅ App URL shared successfully', 'success');
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        addTestResult(`❌ Share failed: ${error.message}`, 'error');
+                    }
+                }
+            } else {
+                // Fallback: copy to clipboard
+                try {
+                    await navigator.clipboard.writeText(url);
+                    addTestResult('✅ App URL copied to clipboard', 'success');
+                } catch (error) {
+                    addTestResult('❌ Share not supported and clipboard failed', 'error');
+                }
+            }
+        }
+        
+        // URL and QR Code
+        function updateShareInfo() {
+            const url = window.location.href;
+            document.getElementById('share-url').textContent = url;
+            
+            // Simple QR code placeholder - in production you'd use a QR code library
+            const qrCode = document.getElementById('qr-code');
+            qrCode.innerHTML = `<div style="font-size: 0.75rem; padding: 1rem;">QR Code<br/>📱<br/>Scan Me</div>`;
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDeviceInfo();
+            updateConnectivityStatus();
+            updateShareInfo();
+            
+            // Listen for online/offline events
+            window.addEventListener('online', updateConnectivityStatus);
+            window.addEventListener('offline', updateConnectivityStatus);
+            
+            addTestResult('SmartPaste Mobile Test App loaded successfully! 🚀', 'success');
+        });
+        
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>

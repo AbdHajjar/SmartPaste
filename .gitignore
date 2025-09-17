@@ -162,9 +162,19 @@ cython_debug/
 # SmartPaste specific
 config.yaml
 smartpaste_data/
-*.md
+smartpaste_cache/
+smartpaste_code_snippets/
+*.tmp
+inst_user_settings.tmp
+
+# Generated documentation (keep source docs)
 !README.md
+!README_ADVANCED.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!ARCHITECTURE.md
 !docs/*.md
+!.github/*.md
 
 # VS Code
 .vscode/
@@ -172,6 +182,36 @@ smartpaste_data/
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# Node.js / NPM
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# Electron
+out/
+dist/
+build/
+
+# React Native
+.expo/
+.expo-shared/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Mobile development
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
 
 # macOS
 .DS_Store

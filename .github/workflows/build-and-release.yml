@@ -1,0 +1,744 @@
+name: 🚀 Build & Release All Platforms
+
+# Optimize for GitHub Free Tier - Only run on releases and manual dispatch
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      build_desktop:
+        description: 'Build Desktop Apps'
+        required: false
+        default: true
+        type: boolean
+      build_mobile:
+        description: 'Build Mobile Apps'
+        required: false
+        default: true
+        type: boolean
+      build_python:
+        description: 'Build Python Package'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Quick validation - saves minutes if there are basic issues
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      should-build-desktop: ${{ steps.check.outputs.desktop }}
+      should-build-mobile: ${{ steps.check.outputs.mobile }}
+      should-build-python: ${{ steps.check.outputs.python }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check what to build
+      id: check
+      run: |
+        echo "desktop=${{ github.event.inputs.build_desktop || 'true' }}" >> $GITHUB_OUTPUT
+        echo "mobile=${{ github.event.inputs.build_mobile || 'true' }}" >> $GITHUB_OUTPUT
+        echo "python=${{ github.event.inputs.build_python || 'true' }}" >> $GITHUB_OUTPUT
+    
+    - name: Validate package.json files
+      run: |
+        if [ "${{ steps.check.outputs.desktop }}" = "true" ]; then
+          node -p "JSON.parse(require('fs').readFileSync('desktop/package.json', 'utf8')).version"
+        fi
+        if [ "${{ steps.check.outputs.mobile }}" = "true" ]; then
+          node -p "JSON.parse(require('fs').readFileSync('mobile/package.json', 'utf8')).version"
+        fi
+
+  # Build Desktop Apps (Windows, macOS, Linux)
+  build-desktop:
+    needs: validate
+    if: needs.validate.outputs.should-build-desktop == 'true'
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            arch: x64
+            artifact-name: SmartPaste-Windows-x64
+          - os: macos-latest
+            platform: mac
+            arch: universal
+            artifact-name: SmartPaste-macOS-Universal
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            artifact-name: SmartPaste-Linux-x64
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Cache Electron Builder
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/electron
+          ~/.cache/electron-builder
+          ${{ runner.temp }}/electron-builder-cache
+        key: ${{ runner.os }}-electron-${{ hashFiles('desktop/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-electron-
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: desktop/package-lock.json
+    
+    - name: Install dependencies (with cache)
+      run: |
+        cd desktop
+        npm ci --prefer-offline --no-audit --no-fund
+    
+    - name: Build Electron App
+      run: |
+        cd desktop
+        npm run build:${{ matrix.platform }}
+      env:
+        NODE_ENV: production
+        ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder-cache
+    
+    - name: Package artifacts
+      shell: bash
+      run: |
+        cd desktop/dist
+        if [ "${{ matrix.platform }}" = "win" ]; then
+          # Windows: ZIP the installer and portable
+          mkdir -p ../artifacts
+          if [ -f "*.exe" ]; then
+            cp *.exe ../artifacts/
+          fi
+          if [ -d "win-unpacked" ]; then
+            cd win-unpacked && zip -r ../../artifacts/SmartPaste-Windows-Portable.zip . && cd ..
+          fi
+        elif [ "${{ matrix.platform }}" = "mac" ]; then
+          # macOS: ZIP the .app and create DMG
+          mkdir -p ../artifacts
+          if [ -f "*.dmg" ]; then
+            cp *.dmg ../artifacts/
+          fi
+          if [ -d "mac" ]; then
+            cd mac && zip -r ../../artifacts/SmartPaste-macOS-App.zip SmartPaste.app && cd ..
+          fi
+        elif [ "${{ matrix.platform }}" = "linux" ]; then
+          # Linux: Copy AppImage, deb, rpm
+          mkdir -p ../artifacts
+          if [ -f "*.AppImage" ]; then
+            cp *.AppImage ../artifacts/
+          fi
+          if [ -f "*.deb" ]; then
+            cp *.deb ../artifacts/
+          fi
+          if [ -f "*.rpm" ]; then
+            cp *.rpm ../artifacts/
+          fi
+        fi
+    
+    - name: Upload Desktop Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: desktop/artifacts/
+        retention-days: 30
+
+  # Build Mobile Web App (React Native Web build for immediate deployment)
+  build-mobile-web:
+    needs: validate
+    if: needs.validate.outputs.should-build-mobile == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: mobile/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd mobile
+        npm ci
+    
+    - name: Build Mobile Web App
+      run: |
+        cd mobile
+        # Create a web build using the existing device-test.html as base
+        mkdir -p dist
+        cp device-test.html dist/index.html
+        cp -r src dist/ 2>/dev/null || true
+        echo "SmartPaste Mobile Web App built successfully"
+    
+    - name: Upload Mobile Web Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: SmartPaste-Mobile-Web
+        path: mobile/dist/
+        retention-days: 30
+
+  # Build Python Package
+  build-python:
+    needs: validate
+    if: needs.validate.outputs.should-build-python == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine wheel
+    
+    - name: Build Python package
+      run: |
+        cd python-lib
+        python -m build
+        
+        # Create additional distribution formats
+        python setup.py sdist bdist_wheel
+    
+    - name: Upload Python Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: SmartPaste-Python-Package
+        path: python-lib/dist/
+        retention-days: 30
+
+  # Generate GitHub Pages content with download links
+  build-pages:
+    needs: [build-desktop, build-mobile-web, build-python]
+    if: always() && (needs.build-desktop.result == 'success' || needs.build-mobile-web.result == 'success' || needs.build-python.result == 'success')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+    
+    - name: Generate download page
+      run: |
+        mkdir -p pages
+        
+        # Create a professional download page
+        cat > pages/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>SmartPaste - Download</title>
+            <link rel="stylesheet" href="styles.css">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        </head>
+        <body>
+            <header>
+                <nav>
+                    <div class="nav-brand">
+                        <h1><i class="fas fa-clipboard"></i> SmartPaste</h1>
+                    </div>
+                    <div class="nav-links">
+                        <a href="#download">Download</a>
+                        <a href="#features">Features</a>
+                        <a href="https://github.com/AbdHajjar/SmartPaste">GitHub</a>
+                    </div>
+                </nav>
+            </header>
+            
+            <main>
+                <section class="hero">
+                    <div class="container">
+                        <h1>Intelligent Clipboard Assistant</h1>
+                        <p>Transform your clipboard into an AI-powered productivity tool across all platforms</p>
+                        <div class="hero-buttons">
+                            <a href="#download" class="btn btn-primary">Download Now</a>
+                            <a href="https://github.com/AbdHajjar/SmartPaste" class="btn btn-secondary">View Source</a>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="download" class="download-section">
+                    <div class="container">
+                        <h2>Download SmartPaste</h2>
+                        <div class="download-grid">
+                            <div class="download-card">
+                                <i class="fab fa-windows"></i>
+                                <h3>Windows</h3>
+                                <p>Windows 10/11 (x64)</p>
+                                <div class="download-links">
+                                    <a href="#" class="btn btn-download" data-platform="windows" data-type="installer">
+                                        <i class="fas fa-download"></i> Installer (.exe)
+                                    </a>
+                                    <a href="#" class="btn btn-download-alt" data-platform="windows" data-type="portable">
+                                        <i class="fas fa-archive"></i> Portable (.zip)
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="download-card">
+                                <i class="fab fa-apple"></i>
+                                <h3>macOS</h3>
+                                <p>macOS 10.15+ (Universal)</p>
+                                <div class="download-links">
+                                    <a href="#" class="btn btn-download" data-platform="macos" data-type="dmg">
+                                        <i class="fas fa-download"></i> DMG Package
+                                    </a>
+                                    <a href="#" class="btn btn-download-alt" data-platform="macos" data-type="app">
+                                        <i class="fas fa-archive"></i> App Bundle (.zip)
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="download-card">
+                                <i class="fab fa-linux"></i>
+                                <h3>Linux</h3>
+                                <p>Ubuntu/Debian/Fedora (x64)</p>
+                                <div class="download-links">
+                                    <a href="#" class="btn btn-download" data-platform="linux" data-type="appimage">
+                                        <i class="fas fa-download"></i> AppImage
+                                    </a>
+                                    <a href="#" class="btn btn-download-alt" data-platform="linux" data-type="deb">
+                                        <i class="fas fa-archive"></i> DEB Package
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="download-card">
+                                <i class="fas fa-mobile-alt"></i>
+                                <h3>Mobile Web</h3>
+                                <p>iOS/Android Browser</p>
+                                <div class="download-links">
+                                    <a href="mobile-web/" class="btn btn-download">
+                                        <i class="fas fa-globe"></i> Open Web App
+                                    </a>
+                                    <a href="#" class="btn btn-download-alt" data-info="mobile-install">
+                                        <i class="fas fa-info-circle"></i> Install Guide
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="download-card">
+                                <i class="fab fa-python"></i>
+                                <h3>Python</h3>
+                                <p>pip install smartpaste-ai</p>
+                                <div class="download-links">
+                                    <a href="https://pypi.org/project/smartpaste-ai/" class="btn btn-download">
+                                        <i class="fas fa-download"></i> PyPI Package
+                                    </a>
+                                    <a href="#" class="btn btn-download-alt" data-platform="python" data-type="wheel">
+                                        <i class="fas fa-archive"></i> Wheel (.whl)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="features" class="features-section">
+                    <div class="container">
+                        <h2>Features</h2>
+                        <div class="features-grid">
+                            <div class="feature-card">
+                                <i class="fas fa-link"></i>
+                                <h3>URL Enhancement</h3>
+                                <p>Automatically extract titles, summaries, and keywords from web links</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-calculator"></i>
+                                <h3>Unit Conversion</h3>
+                                <p>Convert temperatures, measurements, and currencies automatically</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-language"></i>
+                                <h3>Text Analysis</h3>
+                                <p>Language detection, summarization, and intelligent text processing</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-sync"></i>
+                                <h3>Cross-Platform</h3>
+                                <p>Seamless sync across Windows, macOS, Linux, and mobile devices</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            
+            <footer>
+                <div class="container">
+                    <p>&copy; 2025 SmartPaste. Open source under MIT License.</p>
+                    <div class="footer-links">
+                        <a href="https://github.com/AbdHajjar/SmartPaste">GitHub</a>
+                        <a href="https://github.com/AbdHajjar/SmartPaste/issues">Support</a>
+                        <a href="https://github.com/AbdHajjar/SmartPaste/blob/main/README.md">Documentation</a>
+                    </div>
+                </div>
+            </footer>
+            
+            <script src="download.js"></script>
+        </body>
+        </html>
+        EOF
+        
+        # Copy CSS and JS from docs if they exist, otherwise create minimal versions
+        if [ -f "docs/styles.css" ]; then
+          cp docs/styles.css pages/
+        else
+          cat > pages/styles.css << 'EOF'
+        :root {
+            --primary-color: #007acc;
+            --secondary-color: #f1f1f1;
+            --text-color: #333;
+            --bg-color: #ffffff;
+            --border-color: #ddd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+        }
+        
+        .nav-brand h1 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .nav-links a {
+            margin-left: 2rem;
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, var(--primary-color), #005a9e);
+            color: white;
+            text-align: center;
+            padding: 5rem 0;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: var(--primary-color);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-download {
+            background: var(--primary-color);
+            color: white;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-download-alt {
+            background: var(--secondary-color);
+            color: var(--text-color);
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        
+        .download-section {
+            padding: 4rem 0;
+        }
+        
+        .download-section h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+        }
+        
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .download-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .download-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .download-card i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .download-card h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .download-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+        
+        .features-section {
+            background: var(--secondary-color);
+            padding: 4rem 0;
+        }
+        
+        .features-section h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-color);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .footer-links {
+            margin-top: 1rem;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        EOF
+        fi
+        
+        # Create download JavaScript
+        cat > pages/download.js << 'EOF'
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update download links based on latest release
+            updateDownloadLinks();
+        });
+        
+        function updateDownloadLinks() {
+            // This would normally fetch from GitHub API
+            // For now, we'll set up the structure for manual updates
+            const baseUrl = 'https://github.com/AbdHajjar/SmartPaste/releases/latest/download/';
+            
+            const downloadMappings = {
+                'windows-installer': 'SmartPaste-Setup.exe',
+                'windows-portable': 'SmartPaste-Windows-Portable.zip',
+                'macos-dmg': 'SmartPaste-macOS.dmg',
+                'macos-app': 'SmartPaste-macOS-App.zip',
+                'linux-appimage': 'SmartPaste-Linux.AppImage',
+                'linux-deb': 'SmartPaste-Linux.deb',
+                'python-wheel': 'smartpaste_ai-latest-py3-none-any.whl'
+            };
+            
+            // Update download buttons
+            document.querySelectorAll('[data-platform]').forEach(button => {
+                const platform = button.dataset.platform;
+                const type = button.dataset.type;
+                const key = `${platform}-${type}`;
+                
+                if (downloadMappings[key]) {
+                    button.href = baseUrl + downloadMappings[key];
+                }
+            });
+            
+            // Add click tracking
+            document.querySelectorAll('.btn-download, .btn-download-alt').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const platform = this.dataset.platform || 'unknown';
+                    const type = this.dataset.type || 'unknown';
+                    console.log(`Download clicked: ${platform}-${type}`);
+                });
+            });
+        }
+        EOF
+        
+        # Copy mobile web app if available
+        if [ -d "artifacts/SmartPaste-Mobile-Web" ]; then
+          mkdir -p pages/mobile-web
+          cp -r artifacts/SmartPaste-Mobile-Web/* pages/mobile-web/
+        fi
+        
+        # Create artifacts index for direct download
+        echo "Creating artifacts index..."
+        find artifacts/ -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.zip" -o -name "*.whl" | while read file; do
+          echo "Found artifact: $file"
+        done
+    
+    - name: Upload Pages Artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: pages/
+
+  # Deploy to GitHub Pages
+  deploy-pages:
+    needs: build-pages
+    runs-on: ubuntu-latest
+    
+    permissions:
+      pages: write
+      id-token: write
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+  # Create GitHub Release with all artifacts
+  create-release:
+    if: github.event_name == 'release'
+    needs: [build-desktop, build-mobile-web, build-python]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+    
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        
+        # Organize artifacts for release
+        find artifacts/ -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.whl" \) -exec cp {} release-assets/ \;
+        
+        # List all assets
+        echo "Release assets:"
+        ls -la release-assets/
+    
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release-assets/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

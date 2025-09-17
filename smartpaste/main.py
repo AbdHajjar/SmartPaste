@@ -25,6 +25,9 @@ import pyperclip
 from .utils.io import IOUtils
 from .utils.nlp import NLPUtils
 from .utils.timebox import TimeboxUtils
+from .utils.cache import get_content_cache, get_general_cache
+from .utils.async_processor import get_content_processor
+from .utils.automation import get_workflow_automation
 from .handlers import URLHandler, NumberHandler, TextHandler, ImageHandler, CodeHandler, EmailHandler, MathHandler
 
 
@@ -65,6 +68,31 @@ class AppStats:
         return (datetime.now() - self.start_time).total_seconds()
 
 
+class ClipboardManager:
+    """Simple clipboard manager for SmartPaste integration."""
+    
+    def __init__(self):
+        """Initialize clipboard manager."""
+        self.logger = logging.getLogger(__name__)
+    
+    def get_clipboard_content(self) -> Optional[str]:
+        """Get current clipboard content."""
+        try:
+            return pyperclip.paste()
+        except Exception as e:
+            self.logger.error(f"Error accessing clipboard: {e}")
+            return None
+    
+    def set_clipboard_content(self, content: str) -> bool:
+        """Set clipboard content."""
+        try:
+            pyperclip.copy(content)
+            return True
+        except Exception as e:
+            self.logger.error(f"Error setting clipboard: {e}")
+            return False
+
+
 class SmartPasteApp:
     """Main application class for SmartPaste with async processing and stats tracking."""
     
@@ -83,6 +111,19 @@ class SmartPasteApp:
         self._executor = None
         self._max_workers = self.config.get("advanced", {}).get("max_workers", 4)
         self._processing_lock = threading.Lock()
+        
+        # Initialize clipboard manager
+        self.clipboard_manager = ClipboardManager()
+        
+        # Initialize caching system
+        self.content_cache = get_content_cache()
+        self.general_cache = get_general_cache()
+        
+        # Initialize async processor
+        self.async_processor = get_content_processor()
+        
+        # Initialize workflow automation
+        self.workflow_automation = get_workflow_automation()
         
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -249,7 +290,7 @@ class SmartPasteApp:
         return "text"
     
     def _process_content(self, content: str) -> ProcessingResult:
-        """Process clipboard content through appropriate handler with detailed result tracking."""
+        """Process clipboard content through appropriate handler with caching and async support."""
         start_time = time.time()
         content_type = self._detect_content_type(content)
         
@@ -259,6 +300,15 @@ class SmartPasteApp:
             handler_name=content_type
         )
         
+        # Check cache first
+        cached_result = self.content_cache.get_processed_result(content)
+        if cached_result:
+            result.success = True
+            result.processed_data = cached_result
+            result.processing_time = time.time() - start_time
+            self.logger.debug(f"Retrieved {content_type} from cache")
+            return result
+        
         if content_type not in self.handlers:
             result.error_message = f"No handler available for content type: {content_type}"
             self.logger.debug(result.error_message)
@@ -266,7 +316,30 @@ class SmartPasteApp:
         
         try:
             handler = self.handlers[content_type]
-            processed_data = handler.process(content)
+            
+            # Use async processing for supported content types
+            use_async = self.config.get("performance", {}).get("async_processing", True)
+            
+            if use_async and content_type in ['url', 'image', 'code']:
+                # Submit async task
+                task_id = self.async_processor.process_content_async(
+                    content=content,
+                    content_type=content_type,
+                    handler_func=handler.process,
+                    timeout=30.0
+                )
+                
+                # Wait for result
+                task_result = self.async_processor.get_result(task_id, timeout=30.0)
+                
+                if task_result and task_result.success:
+                    processed_data = task_result.result
+                else:
+                    processed_data = None
+                    result.error_message = task_result.error if task_result else "Async processing timeout"
+            else:
+                # Synchronous processing
+                processed_data = handler.process(content)
             
             if processed_data:
                 processed_data["content_type"] = content_type
@@ -275,6 +348,9 @@ class SmartPasteApp:
                 
                 result.success = True
                 result.processed_data = processed_data
+                
+                # Cache the result
+                self.content_cache.cache_processed_result(content, processed_data)
                 
                 # Update stats
                 with self._processing_lock:
@@ -393,10 +469,13 @@ class SmartPasteApp:
         
         # Initialize clipboard content
         try:
-            self._last_clipboard_content = pyperclip.paste()
+            self._last_clipboard_content = self.clipboard_manager.get_clipboard_content()
         except Exception as e:
             self.logger.error(f"Error accessing clipboard: {e}")
             return
+        
+        # Start async processor
+        self.async_processor.start()
         
         check_interval = self.config["general"].get("check_interval", 0.5)
         max_length = self.config["general"].get("max_content_length", 10000)
@@ -413,7 +492,7 @@ class SmartPasteApp:
         while self._running:
             try:
                 # Check for new clipboard content
-                current_content = pyperclip.paste()
+                current_content = self.clipboard_manager.get_clipboard_content()
                 
                 if (current_content != self._last_clipboard_content and 
                     current_content and 
@@ -442,6 +521,18 @@ class SmartPasteApp:
                         # Update clipboard if configured
                         if result.processed_data:
                             self._update_clipboard(result.processed_data)
+                        
+                        # Process through workflow automation
+                        automation_result = self.workflow_automation.process_content(
+                            content=current_content,
+                            content_type=result.content_type,
+                            source_app=None  # Could be enhanced to detect source app
+                        )
+                        
+                        if automation_result['triggered_rules']:
+                            self.logger.info(
+                                f"🤖 Triggered {len(automation_result['triggered_rules'])} automation rules"
+                            )
                     else:
                         self.logger.warning(f"❌ Failed to process content: {result.error_message}")
                     
@@ -466,6 +557,17 @@ class SmartPasteApp:
             self.logger.info("🔄 Shutting down thread pool...")
             self._executor.shutdown(wait=True)
         
+        # Stop async processor
+        self.async_processor.stop()
+        
+        # Show cache statistics
+        cache_info = self.content_cache.get_cache_info()
+        self.logger.info(f"📊 Cache stats: Memory cache hit rate: {cache_info['memory_cache']['stats']['hit_rate']:.1f}%")
+        
+        # Show automation statistics
+        automation_stats = self.workflow_automation.get_stats()
+        self.logger.info(f"🤖 Automation: {automation_stats['stats']['rules_triggered']} rules triggered, {automation_stats['stats']['content_processed']} items processed")
+        
         self.logger.info("🛑 SmartPaste stopped")
         self._show_progress()  # Final stats
         
@@ -474,6 +576,17 @@ class SmartPasteApp:
     def stop(self) -> None:
         """Stop the clipboard monitoring."""
         self._running = False
+    
+    def process_content(self, content: str) -> Optional[Dict[str, Any]]:
+        """Process content and return the result for external use (GUI integration)."""
+        result = self._process_content(content)
+        
+        if result.success and result.processed_data:
+            # Save to markdown
+            self._save_result(result)
+            return result.processed_data
+        
+        return None
 
 
 @click.command()
@@ -490,19 +603,75 @@ class SmartPasteApp:
     is_flag=True,
     help="Enable verbose logging"
 )
+@click.option(
+    "--gui",
+    "-g",
+    is_flag=True,
+    help="Start in GUI mode with system tray"
+)
+@click.option(
+    "--cli",
+    is_flag=True,
+    help="Force CLI mode (no GUI)"
+)
 @click.version_option()
-def main(config: Optional[str], verbose: bool) -> None:
+def main(config: Optional[str], verbose: bool, gui: bool, cli: bool) -> None:
     """SmartPaste - A context-aware AI clipboard assistant.
     
     SmartPaste monitors your clipboard, enriches content contextually,
     and saves organized markdown files with intelligent content analysis.
+    
+    Modes:
+    - GUI mode: --gui or default if GUI dependencies are installed
+    - CLI mode: --cli or fallback if GUI not available
     """
     if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     
+    # Determine mode preference
+    if cli:
+        # Force CLI mode
+        start_cli_mode(config)
+    elif gui:
+        # Force GUI mode
+        start_gui_mode(config)
+    else:
+        # Auto-detect best mode
+        try:
+            # Check if GUI dependencies are available
+            from smartpaste.gui.main import SmartPasteGUI
+            # Try to start in GUI mode
+            start_gui_mode(config)
+        except ImportError:
+            # Fall back to CLI mode
+            click.echo("ℹ️  GUI dependencies not available. Starting in CLI mode.")
+            click.echo("   Install GUI support with: pip install smartpaste-ai[gui]")
+            start_cli_mode(config)
+
+
+def start_cli_mode(config: Optional[str]) -> None:
+    """Start SmartPaste in CLI mode."""
     try:
         app = SmartPasteApp(config)
         app.run()
+    except KeyboardInterrupt:
+        click.echo("\\nShutting down SmartPaste...")
+        sys.exit(0)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+
+def start_gui_mode(config: Optional[str]) -> None:
+    """Start SmartPaste in GUI mode."""
+    try:
+        from smartpaste.gui.main import SmartPasteGUI
+        gui_app = SmartPasteGUI(config_path=config)
+        gui_app.start_gui_mode()
+    except ImportError:
+        click.echo("❌ GUI dependencies not installed.")
+        click.echo("   Install with: pip install smartpaste-ai[gui]")
+        sys.exit(1)
     except KeyboardInterrupt:
         click.echo("\\nShutting down SmartPaste...")
         sys.exit(0)

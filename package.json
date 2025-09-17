@@ -1,0 +1,63 @@
+{
+  "name": "smartpaste-workspace",
+  "version": "1.0.0",
+  "description": "SmartPaste Multi-Platform Workspace",
+  "private": true,
+  "workspaces": [
+    "desktop",
+    "mobile"
+  ],
+  "scripts": {
+    "setup:all": "npm run setup:desktop && npm run setup:mobile && npm run setup:python",
+    "setup:desktop": "cd desktop && npm install",
+    "setup:mobile": "cd mobile && npm install",
+    "setup:python": "cd python-lib && pip install -e .",
+    "dev:desktop": "cd desktop && npm run dev",
+    "dev:mobile": "cd mobile && npm start",
+    "dev:python": "python -m smartpaste",
+    "build:all": "npm run build:desktop && npm run build:mobile && npm run build:python",
+    "build:desktop": "cd desktop && npm run build",
+    "build:mobile": "cd mobile && npm run build:android && npm run build:ios",
+    "build:python": "cd python-lib && python setup.py sdist bdist_wheel",
+    "test:all": "npm run test:desktop && npm run test:mobile && npm run test:python",
+    "test:desktop": "cd desktop && npm test",
+    "test:mobile": "cd mobile && npm test",
+    "test:python": "cd python-lib && python -m pytest",
+    "lint:all": "npm run lint:desktop && npm run lint:mobile",
+    "lint:desktop": "cd desktop && npm run lint",
+    "lint:mobile": "cd mobile && npm run lint",
+    "clean:all": "npm run clean:desktop && npm run clean:mobile && npm run clean:python",
+    "clean:desktop": "cd desktop && rm -rf dist node_modules",
+    "clean:mobile": "cd mobile && rm -rf node_modules android/app/build ios/build",
+    "clean:python": "cd python-lib && rm -rf dist build *.egg-info",
+    "release:prepare": "npm run test:all && npm run build:all",
+    "release:desktop": "cd desktop && npm run dist",
+    "release:mobile": "cd mobile && npm run build:android && npm run build:ios",
+    "release:python": "cd python-lib && twine upload dist/*"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "lerna": "^7.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AbdHajjar/SmartPaste.git"
+  },
+  "keywords": [
+    "clipboard",
+    "multi-platform",
+    "desktop",
+    "mobile",
+    "productivity",
+    "ai-assistant"
+  ],
+  "author": {
+    "name": "SmartPaste Team",
+    "email": "contact@smartpaste.ai"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@react-native/babel-preset": "^0.81.1",
+    "@react-native/metro-config": "^0.81.1"
+  }
+}

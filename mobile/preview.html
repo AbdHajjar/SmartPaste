@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPaste Mobile - Preview</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+        
+        .mobile-frame {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 8px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+        
+        .app-content {
+            padding-top: 40px;
+            height: calc(100% - 40px);
+            overflow-y: auto;
+        }
+        
+        .home-screen {
+            padding: 20px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .app-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .feature-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .feature-desc {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #667eea;
+            font-size: 12px;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .status-bar {
+            position: absolute;
+            top: 8px;
+            left: 20px;
+            right: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 20;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <div class="phone-container">
+            <div class="screen">
+                <div class="notch"></div>
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>📶 📶 🔋</span>
+                </div>
+                
+                <div class="app-content">
+                    <div class="home-screen">
+                        <div class="app-header">
+                            <div class="app-icon">📋</div>
+                            <h1 style="margin: 0; font-size: 24px;">SmartPaste</h1>
+                            <p style="margin: 8px 0 0; opacity: 0.9; font-size: 16px;">Intelligent Clipboard Assistant</p>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div style="background: rgba(255,255,255,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                                <div style="font-size: 18px; margin-bottom: 8px;">📊 Today's Activity</div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div><strong>47</strong><br><small>Items Processed</small></div>
+                                    <div><strong>12</strong><br><small>URLs Enhanced</small></div>
+                                    <div><strong>8</strong><br><small>Text Analyzed</small></div>
+                                </div>
+                            </div>
+                            
+                            <div style="background: rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <span style="color: #10b981; font-size: 20px;">●</span>
+                                    <span>Monitoring Active</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">🔗</div>
+                                <div class="feature-title">URL Processing</div>
+                                <div class="feature-desc">Extract titles & summaries</div>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">📝</div>
+                                <div class="feature-title">Text Analysis</div>
+                                <div class="feature-desc">Language detection & AI</div>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">🔢</div>
+                                <div class="feature-title">Number Convert</div>
+                                <div class="feature-desc">Units & measurements</div>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">🖼️</div>
+                                <div class="feature-title">Image OCR</div>
+                                <div class="feature-desc">Extract text from images</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item active">
+                        <div class="nav-icon">🏠</div>
+                        <div>Home</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">📚</div>
+                        <div>History</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">⚙️</div>
+                        <div>Settings</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="control-btn" onclick="showScreen('home')">Home</button>
+        <button class="control-btn" onclick="showScreen('history')">History</button>
+        <button class="control-btn" onclick="showScreen('settings')">Settings</button>
+    </div>
+
+    <script>
+        function showScreen(screen) {
+            const appContent = document.querySelector('.app-content');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            // Remove active state from all nav items
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            // Add active state to current nav item
+            const activeNavIndex = screen === 'home' ? 0 : screen === 'history' ? 1 : 2;
+            navItems[activeNavIndex].classList.add('active');
+            
+            // Change screen content
+            switch(screen) {
+                case 'home':
+                    appContent.innerHTML = `
+                        <div class="home-screen">
+                            <div class="app-header">
+                                <div class="app-icon">📋</div>
+                                <h1 style="margin: 0; font-size: 24px;">SmartPaste</h1>
+                                <p style="margin: 8px 0 0; opacity: 0.9; font-size: 16px;">Intelligent Clipboard Assistant</p>
+                            </div>
+                            
+                            <div style="text-align: center; margin: 20px 0;">
+                                <div style="background: rgba(255,255,255,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                                    <div style="font-size: 18px; margin-bottom: 8px;">📊 Today's Activity</div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <div><strong>47</strong><br><small>Items Processed</small></div>
+                                        <div><strong>12</strong><br><small>URLs Enhanced</small></div>
+                                        <div><strong>8</strong><br><small>Text Analyzed</small></div>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <span style="color: #10b981; font-size: 20px;">●</span>
+                                        <span>Monitoring Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="feature-grid">
+                                <div class="feature-card">
+                                    <div class="feature-icon">🔗</div>
+                                    <div class="feature-title">URL Processing</div>
+                                    <div class="feature-desc">Extract titles & summaries</div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">📝</div>
+                                    <div class="feature-title">Text Analysis</div>
+                                    <div class="feature-desc">Language detection & AI</div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">🔢</div>
+                                    <div class="feature-title">Number Convert</div>
+                                    <div class="feature-desc">Units & measurements</div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">🖼️</div>
+                                    <div class="feature-title">Image OCR</div>
+                                    <div class="feature-desc">Extract text from images</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'history':
+                    appContent.innerHTML = `
+                        <div style="padding: 20px; background: white; height: 100%;">
+                            <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                <h2 style="margin: 0; color: #1e293b;">Clipboard History</h2>
+                                <span style="margin-left: auto; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; font-size: 12px;">47 items</span>
+                            </div>
+                            
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                                <input type="text" placeholder="🔍 Search clipboard history..." style="width: 100%; border: none; background: transparent; font-size: 16px;" />
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                                <span style="background: #3b82f6; color: white; padding: 6px 12px; border-radius: 16px; font-size: 12px;">All</span>
+                                <span style="background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 16px; font-size: 12px;">URLs</span>
+                                <span style="background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 16px; font-size: 12px;">Text</span>
+                                <span style="background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 16px; font-size: 12px;">Images</span>
+                            </div>
+                            
+                            <div style="space-y: 12px;">
+                                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                        <span style="color: #3b82f6;">🔗</span>
+                                        <span style="font-size: 12px; color: #64748b;">2 min ago</span>
+                                    </div>
+                                    <div style="font-weight: 500; margin-bottom: 4px;">GitHub - SmartPaste: Intelligent Clipboard</div>
+                                    <div style="font-size: 14px; color: #64748b;">https://github.com/smartpaste/smartpaste</div>
+                                </div>
+                                
+                                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                        <span style="color: #10b981;">📝</span>
+                                        <span style="font-size: 12px; color: #64748b;">5 min ago</span>
+                                    </div>
+                                    <div style="font-weight: 500; margin-bottom: 4px;">Meeting Notes - Q4 Planning</div>
+                                    <div style="font-size: 14px; color: #64748b;">The quarterly planning meeting covered...</div>
+                                </div>
+                                
+                                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                        <span style="color: #f59e0b;">🔢</span>
+                                        <span style="font-size: 12px; color: #64748b;">8 min ago</span>
+                                    </div>
+                                    <div style="font-weight: 500; margin-bottom: 4px;">25°C → 77°F</div>
+                                    <div style="font-size: 14px; color: #64748b;">Temperature conversion</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'settings':
+                    appContent.innerHTML = `
+                        <div style="padding: 20px; background: white; height: 100%;">
+                            <h2 style="margin: 0 0 20px; color: #1e293b;">Settings</h2>
+                            
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: #64748b; font-size: 14px; margin-bottom: 12px;">GENERAL</h3>
+                                <div style="background: #f8fafc; border-radius: 8px; padding: 16px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                        <div>
+                                            <div style="font-weight: 500;">Auto Start</div>
+                                            <div style="font-size: 14px; color: #64748b;">Start monitoring on app launch</div>
+                                        </div>
+                                        <div style="width: 44px; height: 24px; background: #10b981; border-radius: 12px; position: relative;">
+                                            <div style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div style="font-weight: 500;">Notifications</div>
+                                            <div style="font-size: 14px; color: #64748b;">Show processing notifications</div>
+                                        </div>
+                                        <div style="width: 44px; height: 24px; background: #10b981; border-radius: 12px; position: relative;">
+                                            <div style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: #64748b; font-size: 14px; margin-bottom: 12px;">CONTENT PROCESSING</h3>
+                                <div style="background: #f8fafc; border-radius: 8px; padding: 16px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <span>🔗 URL Processing</span>
+                                        <div style="width: 44px; height: 24px; background: #10b981; border-radius: 12px; position: relative;">
+                                            <div style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <span>📝 Text Analysis</span>
+                                        <div style="width: 44px; height: 24px; background: #10b981; border-radius: 12px; position: relative;">
+                                            <div style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>🔢 Number Conversion</span>
+                                        <div style="width: 44px; height: 24px; background: #e2e8f0; border-radius: 12px; position: relative;">
+                                            <div style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 style="color: #64748b; font-size: 14px; margin-bottom: 12px;">ABOUT</h3>
+                                <div style="background: #f8fafc; border-radius: 8px; padding: 16px;">
+                                    <div style="text-align: center;">
+                                        <div style="font-weight: 500; margin-bottom: 8px;">SmartPaste Mobile</div>
+                                        <div style="color: #64748b; margin-bottom: 16px;">Version 1.0.0</div>
+                                        <button style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 14px;">Export Settings</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

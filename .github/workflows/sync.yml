@@ -1,0 +1,350 @@
+name: Sync and Integration Tests
+
+on:
+  push:
+    paths:
+      - 'shared/sync/**'
+      - 'desktop/src/**'
+      - 'mobile/src/**'
+      - 'python-lib/**'
+      - '.github/workflows/sync.yml'
+  pull_request:
+    paths:
+      - 'shared/sync/**'
+      - 'desktop/src/**'
+      - 'mobile/src/**'
+      - 'python-lib/**'
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+  workflow_dispatch:
+
+jobs:
+  test-sync-core:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install shared dependencies
+      working-directory: shared
+      run: |
+        npm init -y
+        npm install typescript @types/node jest @types/jest ts-jest
+        
+    - name: Compile TypeScript
+      working-directory: shared
+      run: |
+        npx tsc sync/SyncCore.ts --outDir dist --target es2020 --module commonjs
+        
+    - name: Run sync core tests
+      working-directory: shared
+      run: |
+        npm test sync/
+        
+  test-desktop-integration:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'desktop/package-lock.json'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install desktop dependencies
+      working-directory: desktop
+      run: npm ci
+      
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -e python-lib[dev]
+        
+    - name: Run desktop sync tests
+      working-directory: desktop
+      run: npm run test:sync
+      
+    - name: Test desktop-python integration
+      run: |
+        python -c "
+        import sys
+        sys.path.append('.')
+        from smartpaste.main import SmartPaste
+        from python_lib.smartpaste_lib import SyncCore
+        
+        # Test integration
+        app = SmartPaste()
+        print('Desktop-Python integration test passed')
+        "
+        
+  test-mobile-integration:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'mobile/package-lock.json'
+        
+    - name: Install mobile dependencies
+      working-directory: mobile
+      run: npm ci
+      
+    - name: Run mobile sync tests
+      working-directory: mobile
+      run: npm run test:sync
+      
+    - name: Test mobile sync service
+      working-directory: mobile
+      run: |
+        npm run test -- src/services/SyncService.test.js
+        
+  test-cross-platform-sync:
+    runs-on: ubuntu-latest
+    services:
+      firebase-emulator:
+        image: firebase/firebase-tools
+        ports:
+          - 9000:9000
+          - 9099:9099
+        options: --entrypoint firebase emulators:start --only firestore,auth
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        npm install -g firebase-tools
+        pip install -r requirements.txt
+        pip install -e python-lib[dev]
+        
+    - name: Install desktop dependencies
+      working-directory: desktop
+      run: npm ci
+      
+    - name: Install mobile dependencies
+      working-directory: mobile
+      run: npm ci
+      
+    - name: Start Firebase emulators
+      run: |
+        firebase emulators:start --only firestore,auth --project demo-smartpaste &
+        sleep 10
+        
+    - name: Run cross-platform sync test
+      run: |
+        # Test sync between desktop and mobile
+        node tests/integration/cross-platform-sync.js
+        
+    - name: Test Python library sync
+      run: |
+        python tests/integration/test_python_sync.py
+        
+  test-conflict-resolution:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install shared dependencies
+      working-directory: shared
+      run: |
+        npm init -y
+        npm install typescript jest @types/jest ts-jest
+        
+    - name: Run conflict resolution tests
+      working-directory: shared
+      run: |
+        npx jest sync/ConflictResolver.test.ts
+        
+  test-encryption:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      working-directory: shared
+      run: |
+        npm init -y
+        npm install crypto-js @types/crypto-js jest @types/jest
+        
+    - name: Run encryption tests
+      working-directory: shared
+      run: |
+        npm test sync/encryption
+        
+  test-performance:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        npm install -g clinic autocannon
+        
+    - name: Install desktop dependencies
+      working-directory: desktop
+      run: npm ci
+      
+    - name: Run performance tests
+      run: |
+        # Test sync performance
+        node tests/performance/sync-performance.js
+        
+    - name: Generate performance report
+      run: |
+        echo "Performance test results" > performance-report.txt
+        cat tests/performance/results.json >> performance-report.txt
+        
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: performance-report.txt
+        
+  test-network-conditions:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wondershaper
+        
+    - name: Install test dependencies
+      working-directory: shared
+      run: |
+        npm init -y
+        npm install jest @types/jest
+        
+    - name: Test slow network
+      run: |
+        # Simulate slow network
+        sudo wondershaper eth0 1000 1000  # 1Mbps
+        npm test tests/network/slow-network.test.js
+        sudo wondershaper clear eth0
+        
+    - name: Test offline scenario
+      run: |
+        # Test offline sync queue
+        npm test tests/network/offline.test.js
+        
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security scan
+      uses: securecodewarrior/github-action-add-sarif@v1
+      with:
+        sarif-file: security-scan-results.sarif
+        
+    - name: Run dependency check
+      run: |
+        npm audit --audit-level high
+        
+    - name: Scan for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        
+  integration-report:
+    needs: [
+      test-sync-core,
+      test-desktop-integration,
+      test-mobile-integration,
+      test-cross-platform-sync,
+      test-conflict-resolution,
+      test-encryption,
+      test-performance,
+      test-network-conditions
+    ]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Generate integration report
+      run: |
+        echo "# SmartPaste Sync Integration Test Report" > integration-report.md
+        echo "" >> integration-report.md
+        echo "## Test Results" >> integration-report.md
+        echo "- Sync Core: ${{ needs.test-sync-core.result }}" >> integration-report.md
+        echo "- Desktop Integration: ${{ needs.test-desktop-integration.result }}" >> integration-report.md
+        echo "- Mobile Integration: ${{ needs.test-mobile-integration.result }}" >> integration-report.md
+        echo "- Cross-Platform Sync: ${{ needs.test-cross-platform-sync.result }}" >> integration-report.md
+        echo "- Conflict Resolution: ${{ needs.test-conflict-resolution.result }}" >> integration-report.md
+        echo "- Encryption: ${{ needs.test-encryption.result }}" >> integration-report.md
+        echo "- Performance: ${{ needs.test-performance.result }}" >> integration-report.md
+        echo "- Network Conditions: ${{ needs.test-network-conditions.result }}" >> integration-report.md
+        echo "" >> integration-report.md
+        echo "Generated on: $(date)" >> integration-report.md
+        
+    - name: Upload integration report
+      uses: actions/upload-artifact@v3
+      with:
+        name: integration-report
+        path: integration-report.md

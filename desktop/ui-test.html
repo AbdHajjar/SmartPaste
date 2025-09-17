@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPaste UI Test</title>
+    <link rel="stylesheet" href="src/renderer/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>SmartPaste</span>
+                </div>
+                <div class="app-version">v1.0.0</div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="showPage('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" onclick="showPage('history')">
+                    <i class="fas fa-history"></i>
+                    <span>Clipboard History</span>
+                </li>
+                <li class="nav-item" onclick="showPage('handlers')">
+                    <i class="fas fa-cogs"></i>
+                    <span>Content Handlers</span>
+                </li>
+                <li class="nav-item" onclick="showPage('sync')">
+                    <i class="fas fa-sync"></i>
+                    <span>Synchronization</span>
+                </li>
+                <li class="nav-item" onclick="showPage('settings')">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Settings</span>
+                </li>
+                <li class="nav-item" onclick="showPage('statistics')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Statistics</span>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot active"></div>
+                    <span>Monitoring Active</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-play"></i>
+                        Process Current
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-pause"></i>
+                        Pause Monitoring
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clipboard"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">42</div>
+                            <div class="stat-label">Clipboard Items</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">38</div>
+                            <div class="stat-label">Processed Items</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">02:15:30</div>
+                            <div class="stat-label">Session Time</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Online</div>
+                            <div class="stat-label">Sync Status</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Recent Activity</h3>
+                            <button class="btn-link">View All</button>
+                        </div>
+                        <div class="card-content">
+                            <div class="activity-list">
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-link"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-text">https://github.com/example/repo processed</div>
+                                        <div class="activity-time">2 minutes ago</div>
+                                    </div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-file-text"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-text">Text content analyzed</div>
+                                        <div class="activity-time">5 minutes ago</div>
+                                    </div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas fa-calculator"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-text">Number converted: 100°F → 37.8°C</div>
+                                        <div class="activity-time">8 minutes ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Handler Status</h3>
+                            <button class="btn-link">Configure</button>
+                        </div>
+                        <div class="card-content">
+                            <div class="handler-list">
+                                <div class="handler-item">
+                                    <span class="handler-name">URL Handler</span>
+                                    <div class="handler-status">
+                                        <span class="status-badge enabled">Enabled</span>
+                                    </div>
+                                </div>
+                                <div class="handler-item">
+                                    <span class="handler-name">Text Handler</span>
+                                    <div class="handler-status">
+                                        <span class="status-badge enabled">Enabled</span>
+                                    </div>
+                                </div>
+                                <div class="handler-item">
+                                    <span class="handler-name">Image Handler</span>
+                                    <div class="handler-status">
+                                        <span class="status-badge disabled">Disabled</span>
+                                    </div>
+                                </div>
+                                <div class="handler-item">
+                                    <span class="handler-name">Number Handler</span>
+                                    <div class="handler-status">
+                                        <span class="status-badge enabled">Enabled</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other pages (hidden) -->
+            <div id="history-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Clipboard History</h3>
+                        <div class="search-container">
+                            <input type="text" placeholder="Search clipboard items...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="history-container">
+                            <div class="history-item">
+                                <div class="history-content">https://example.com - A sample website</div>
+                                <div class="history-meta">
+                                    <span>2 minutes ago</span>
+                                    <div class="history-actions">
+                                        <button>Copy</button>
+                                        <button>Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="history-item">
+                                <div class="history-content">Lorem ipsum dolor sit amet, consectetur...</div>
+                                <div class="history-meta">
+                                    <span>5 minutes ago</span>
+                                    <div class="history-actions">
+                                        <button>Copy</button>
+                                        <button>Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected page
+            const targetPage = document.getElementById(`${pageId}-page`);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            
+            // Add active to clicked nav item
+            event.target.closest('.nav-item').classList.add('active');
+            
+            // Update page title
+            const pageNames = {
+                'dashboard': 'Dashboard',
+                'history': 'Clipboard History', 
+                'handlers': 'Content Handlers',
+                'sync': 'Synchronization',
+                'settings': 'Settings',
+                'statistics': 'Statistics'
+            };
+            document.getElementById('pageTitle').textContent = pageNames[pageId] || 'Dashboard';
+        }
+    </script>
+</body>
+</html>

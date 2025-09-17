@@ -1,0 +1,139 @@
+name: 🏷️ Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
+      release_name:
+        description: 'Release name (e.g., Version 1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+      draft:
+        description: 'Create as draft'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Validate version format
+      run: |
+        if [[ ! "${{ github.event.inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+          echo "❌ Invalid version format. Use format: v1.0.0 or v1.0.0-beta"
+          exit 1
+        fi
+        echo "✅ Version format is valid"
+    
+    - name: Check if tag exists
+      run: |
+        if git rev-parse "${{ github.event.inputs.version }}" >/dev/null 2>&1; then
+          echo "❌ Tag ${{ github.event.inputs.version }} already exists"
+          exit 1
+        fi
+        echo "✅ Tag is available"
+    
+    - name: Create Git Tag
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a "${{ github.event.inputs.version }}" -m "${{ github.event.inputs.release_name }}"
+        git push origin "${{ github.event.inputs.version }}"
+    
+    - name: Generate Release Notes
+      id: release_notes
+      run: |
+        # Generate release notes based on commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        if [ -n "$LAST_TAG" ]; then
+          echo "## 🚀 What's New" > release_notes.md
+          echo "" >> release_notes.md
+          git log --pretty=format:"- %s" $LAST_TAG..HEAD >> release_notes.md
+          echo "" >> release_notes.md
+        else
+          echo "## 🚀 Initial Release" > release_notes.md
+          echo "" >> release_notes.md
+          echo "First release of SmartPaste with multi-platform support!" >> release_notes.md
+          echo "" >> release_notes.md
+        fi
+        
+        echo "" >> release_notes.md
+        echo "## 📦 Downloads" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Desktop Applications" >> release_notes.md
+        echo "- **Windows**: \`SmartPaste-Setup.exe\` (Installer) | \`SmartPaste-Windows-Portable.zip\` (Portable)" >> release_notes.md
+        echo "- **macOS**: \`SmartPaste-macOS.dmg\` (Package) | \`SmartPaste-macOS-App.zip\` (App Bundle)" >> release_notes.md
+        echo "- **Linux**: \`SmartPaste-Linux.AppImage\` (Universal) | \`SmartPaste-Linux.deb\` (Debian/Ubuntu) | \`SmartPaste-Linux.rpm\` (Fedora/RHEL)" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Other Platforms" >> release_notes.md
+        echo "- **Python Package**: \`pip install smartpaste-ai\` or download \`.whl\` file" >> release_notes.md
+        echo "- **Mobile Web App**: [Open in browser](https://abdhajjar.github.io/SmartPaste/mobile-web/)" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "## 🔗 Links" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "- 🌐 **Official Website**: https://abdhajjar.github.io/SmartPaste/" >> release_notes.md
+        echo "- 📱 **Mobile Web App**: https://abdhajjar.github.io/SmartPaste/mobile-web/" >> release_notes.md
+        echo "- 🐍 **PyPI Package**: https://pypi.org/project/smartpaste-ai/" >> release_notes.md
+        echo "- 📖 **Documentation**: https://github.com/AbdHajjar/SmartPaste/blob/main/README.md" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "---" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "**Full Changelog**: https://github.com/AbdHajjar/SmartPaste/compare/$LAST_TAG...${{ github.event.inputs.version }}" >> release_notes.md
+    
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.version }}
+        release_name: ${{ github.event.inputs.release_name }}
+        body_path: release_notes.md
+        draft: ${{ github.event.inputs.draft }}
+        prerelease: ${{ github.event.inputs.prerelease }}
+    
+    - name: Summary
+      run: |
+        echo "## 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Release**: [${{ github.event.inputs.release_name }}](${{ steps.create_release.outputs.html_url }})" >> $GITHUB_STEP_SUMMARY
+        echo "**Tag**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Draft**: ${{ github.event.inputs.draft }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Pre-release**: ${{ github.event.inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The release has been created and will trigger the build workflow to generate all platform binaries." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+        echo "1. ⏳ Wait for the build workflow to complete (~15-20 minutes)" >> $GITHUB_STEP_SUMMARY
+        echo "2. 📦 Built artifacts will be automatically attached to the release" >> $GITHUB_STEP_SUMMARY
+        echo "3. 🌐 GitHub Pages will be updated with new download links" >> $GITHUB_STEP_SUMMARY
+        echo "4. 📢 Consider announcing the release on social media!" >> $GITHUB_STEP_SUMMARY
+
+  # Trigger the build workflow
+  trigger-build:
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Build Workflow
+      run: |
+        echo "🚀 Build workflow will be automatically triggered by the release creation"
+        echo "Monitor the progress in the Actions tab: https://github.com/AbdHajjar/SmartPaste/actions"

@@ -1,0 +1,228 @@
+name: 🚀 Multi-Platform Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Test all platforms
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [desktop, mobile, python]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      if: matrix.platform == 'desktop' || matrix.platform == 'mobile'
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Setup Python
+      if: matrix.platform == 'python'
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: Test Desktop
+      if: matrix.platform == 'desktop'
+      run: |
+        cd desktop
+        npm ci
+        npm test
+    
+    - name: Test Mobile
+      if: matrix.platform == 'mobile'
+      run: |
+        cd mobile
+        npm ci
+        npm test
+    
+    - name: Test Python
+      if: matrix.platform == 'python'
+      run: |
+        cd python-lib
+        pip install -e .
+        pip install pytest
+        python -m pytest
+
+  # Build Desktop Apps
+  build-desktop:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        cd desktop
+        npm ci
+    
+    - name: Build Desktop App
+      run: |
+        cd desktop
+        npm run build
+    
+    - name: Upload Desktop Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: desktop-${{ matrix.os }}
+        path: desktop/dist/
+
+  # Build Mobile Apps
+  build-mobile:
+    needs: test
+    runs-on: macos-latest  # Required for iOS builds
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+    
+    - name: Install dependencies
+      run: |
+        cd mobile
+        npm ci
+    
+    - name: Build Android APK
+      run: |
+        cd mobile
+        npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle
+        cd android
+        ./gradlew assembleRelease
+    
+    - name: Build iOS (if on macOS)
+      if: runner.os == 'macOS'
+      run: |
+        cd mobile/ios
+        pod install
+        xcodebuild -workspace SmartPaste.xcworkspace -scheme SmartPaste -configuration Release -destination generic/platform=iOS -archivePath SmartPaste.xcarchive archive
+    
+    - name: Upload Mobile Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: mobile-apps
+        path: |
+          mobile/android/app/build/outputs/apk/release/
+          mobile/ios/build/
+
+  # Build Python Package
+  build-python:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+    
+    - name: Build Python package
+      run: |
+        cd python-lib
+        python -m build
+    
+    - name: Upload Python Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-package
+        path: python-lib/dist/
+
+  # Release to GitHub
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-desktop, build-mobile, build-python]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          desktop-*/
+          mobile-apps/
+          python-package/
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Deploy Python to PyPI
+  deploy-python:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-python
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download Python artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: python-package
+        path: dist/
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.8.10
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        packages-dir: dist/
+
+  # Deploy to App Stores (would require additional setup)
+  deploy-mobile:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-mobile
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to App Stores
+      run: |
+        echo "Mobile app deployment would happen here"
+        echo "Requires App Store Connect and Google Play Console setup"

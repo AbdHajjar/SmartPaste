@@ -1,0 +1,35 @@
+# SmartPaste Version Information
+# This file is used by build scripts to ensure consistent versioning across all platforms
+
+# Current version - update this when releasing
+SMARTPASTE_VERSION = "1.0.0"
+SMARTPASTE_BUILD = "2025.09.17"
+SMARTPASTE_CODENAME = "Phoenix"
+
+# Version information for different platforms
+[platforms]
+desktop = "1.0.0"
+mobile = "1.0.0"
+python = "1.0.0"
+web = "1.0.0"
+
+# Release information
+[release]
+date = "2025-09-17"
+type = "stable"  # alpha, beta, rc, stable
+notes = "Multi-platform release with desktop, mobile, and Python support"
+
+# Build configuration
+[build]
+node_version = "18"
+python_version = "3.11"
+electron_version = "28.0.0"
+react_native_version = "0.72.0"
+
+# Repository information
+[repo]
+owner = "AbdHajjar"
+name = "SmartPaste"
+url = "https://github.com/AbdHajjar/SmartPaste"
+homepage = "https://abdhajjar.github.io/SmartPaste"
+issues = "https://github.com/AbdHajjar/SmartPaste/issues"

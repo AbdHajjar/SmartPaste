@@ -46,6 +46,12 @@ dependencies = [
 ocr = [
     "pytesseract>=0.3.10",
 ]
+gui = [
+    "pystray>=0.19.4",
+    "tkinter-tooltip>=2.2.0",
+    "customtkinter>=5.2.0",
+    "pillow>=10.0.0",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
@@ -56,9 +62,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/AbdHajjar/smartpaste"
-Repository = "https://github.com/AbdHajjar/smartpaste"
-Issues = "https://github.com/AbdHajjar/smartpaste/issues"
+Homepage = "https://abdhajjar.github.io/SmartPaste"
+Repository = "https://github.com/AbdHajjar/SmartPaste"
+Issues = "https://github.com/AbdHajjar/SmartPaste/issues"
+Documentation = "https://github.com/AbdHajjar/SmartPaste/blob/main/README.md"
+"Download" = "https://github.com/AbdHajjar/SmartPaste/releases/latest"
 
 [project.scripts]
 smartpaste = "smartpaste.main:main"

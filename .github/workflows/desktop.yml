@@ -1,0 +1,157 @@
+name: Build and Release Desktop Apps
+
+on:
+  push:
+    tags:
+      - 'v*'
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'desktop/package-lock.json'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Install Desktop dependencies
+      working-directory: desktop
+      run: npm ci
+      
+    - name: Run tests
+      working-directory: desktop
+      run: npm test
+      
+    - name: Build Python backend
+      run: |
+        pyinstaller --onefile --name smartpaste-core smartpaste/main.py
+        
+    - name: Build Electron app
+      working-directory: desktop
+      run: |
+        npm run build
+        npm run electron:build -- --publish=never
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: smartpaste-${{ matrix.platform }}-${{ matrix.arch }}
+        path: |
+          desktop/dist/*.exe
+          desktop/dist/*.dmg
+          desktop/dist/*.AppImage
+          desktop/dist/*.deb
+          desktop/dist/*.rpm
+          
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        files: |
+          smartpaste-*/smartpaste-*.*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+  winget:
+    needs: release
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Update Winget Package
+      uses: vedantmgoyal2009/winget-releaser@v2
+      with:
+        identifier: SmartPaste.SmartPaste
+        token: ${{ secrets.WINGET_TOKEN }}
+        
+  homebrew:
+    needs: release
+    runs-on: macos-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Update Homebrew Formula
+      uses: mislav/bump-homebrew-formula-action@v2
+      with:
+        formula-name: smartpaste
+        homebrew-tap: smartpaste/homebrew-tap
+        base-branch: main
+        download-url: https://github.com/smartpaste/smartpaste/releases/latest/download/smartpaste-darwin-x64.dmg
+      env:
+        COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+        
+  snap:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Build and publish Snap
+      uses: snapcore/action-build@v1
+      with:
+        path: desktop/snap
+        
+    - name: Release to Snap Store
+      uses: snapcore/action-publish@v1
+      env:
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_TOKEN }}
+      with:
+        snap: smartpaste_*.snap
+        release: stable

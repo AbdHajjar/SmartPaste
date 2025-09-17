@@ -1,0 +1,144 @@
+[
+  {
+    "id": "auto_save_urls",
+    "name": "Auto-save URLs",
+    "description": "Automatically save URLs to a bookmark file",
+    "conditions": [
+      {
+        "type": "content_type",
+        "value": "url",
+        "operator": "equals",
+        "case_sensitive": false
+      }
+    ],
+    "actions": [
+      {
+        "type": "append_to_file",
+        "parameters": {
+          "file_path": "smartpaste_bookmarks.txt",
+          "content": "[{timestamp}] {content}"
+        },
+        "delay_seconds": 0.0,
+        "enabled": true
+      },
+      {
+        "type": "send_notification",
+        "parameters": {
+          "title": "URL Saved",
+          "message": "URL automatically saved to bookmarks"
+        },
+        "delay_seconds": 0.0,
+        "enabled": true
+      }
+    ],
+    "enabled": true,
+    "priority": 1,
+    "created_at": "2025-09-17T12:46:04.972983",
+    "last_triggered": null,
+    "trigger_count": 0,
+    "cooldown_seconds": 0.0,
+    "max_triggers_per_hour": null
+  },
+  {
+    "id": "email_to_todo",
+    "name": "Email to Todo",
+    "description": "Create todo items for email addresses",
+    "conditions": [
+      {
+        "type": "content_type",
+        "value": "email",
+        "operator": "equals",
+        "case_sensitive": false
+      }
+    ],
+    "actions": [
+      {
+        "type": "create_todo",
+        "parameters": {
+          "text": "Follow up with: {content}",
+          "todo_file": "smartpaste_followups.txt"
+        },
+        "delay_seconds": 0.0,
+        "enabled": true
+      }
+    ],
+    "enabled": true,
+    "priority": 2,
+    "created_at": "2025-09-17T12:46:04.972983",
+    "last_triggered": null,
+    "trigger_count": 0,
+    "cooldown_seconds": 0.0,
+    "max_triggers_per_hour": null
+  },
+  {
+    "id": "format_code",
+    "name": "Format Code",
+    "description": "Auto-format copied code snippets",
+    "conditions": [
+      {
+        "type": "content_type",
+        "value": "code",
+        "operator": "equals",
+        "case_sensitive": false
+      }
+    ],
+    "actions": [
+      {
+        "type": "transform_content",
+        "parameters": {
+          "transformation": "remove_whitespace"
+        },
+        "delay_seconds": 0.0,
+        "enabled": true
+      },
+      {
+        "type": "save_to_file",
+        "parameters": {
+          "file_path": "smartpaste_code_snippets/{date}_snippet.txt",
+          "content": "// Copied at {timestamp}\\n{transformed_content}"
+        },
+        "delay_seconds": 0.0,
+        "enabled": true
+      }
+    ],
+    "enabled": true,
+    "priority": 1,
+    "created_at": "2025-09-17T12:46:04.972983",
+    "last_triggered": null,
+    "trigger_count": 0,
+    "cooldown_seconds": 0.0,
+    "max_triggers_per_hour": null
+  },
+  {
+    "id": "emergency_alert",
+    "name": "Emergency Alert",
+    "description": "Send notification for emergency keywords",
+    "conditions": [
+      {
+        "type": "pattern_regex",
+        "value": "\\\\b(urgent|emergency|asap|critical|important)\\\\b",
+        "operator": "equals",
+        "case_sensitive": false
+      }
+    ],
+    "actions": [
+      {
+        "type": "send_notification",
+        "parameters": {
+          "title": "⚠️ Emergency Content Detected",
+          "message": "Content contains emergency keywords",
+          "timeout": 10
+        },
+        "delay_seconds": 0.0,
+        "enabled": true
+      }
+    ],
+    "enabled": true,
+    "priority": 10,
+    "created_at": "2025-09-17T12:46:04.972983",
+    "last_triggered": null,
+    "trigger_count": 0,
+    "cooldown_seconds": 300,
+    "max_triggers_per_hour": null
+  }
+]

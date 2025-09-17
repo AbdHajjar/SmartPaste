@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPaste - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>SmartPaste</span>
+                </div>
+                <div class="app-version">v1.0.0</div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-page="history">
+                    <i class="fas fa-history"></i>
+                    <span>Clipboard History</span>
+                </li>
+                <li class="nav-item" data-page="handlers">
+                    <i class="fas fa-cogs"></i>
+                    <span>Content Handlers</span>
+                </li>
+                <li class="nav-item" data-page="sync">
+                    <i class="fas fa-sync"></i>
+                    <span>Synchronization</span>
+                </li>
+                <li class="nav-item" data-page="settings">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Settings</span>
+                </li>
+                <li class="nav-item" data-page="statistics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Statistics</span>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot active" id="monitoringStatus"></div>
+                    <span id="statusText">Monitoring Active</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="processClipboard">
+                        <i class="fas fa-play"></i>
+                        Process Current
+                    </button>
+                    <button class="btn btn-secondary" id="toggleMonitoring">
+                        <i class="fas fa-pause"></i>
+                        Pause Monitoring
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clipboard"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="totalItems">0</div>
+                            <div class="stat-label">Clipboard Items</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="processedItems">0</div>
+                            <div class="stat-label">Processed Items</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="sessionTime">00:00:00</div>
+                            <div class="stat-label">Session Time</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="syncStatus">Offline</div>
+                            <div class="stat-label">Sync Status</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Recent Activity</h3>
+                            <button class="btn-link" onclick="showPage('history')">View All</button>
+                        </div>
+                        <div class="card-content">
+                            <div id="recentActivity" class="activity-list">
+                                <!-- Recent items will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Handler Status</h3>
+                            <button class="btn-link" onclick="showPage('handlers')">Configure</button>
+                        </div>
+                        <div class="card-content">
+                            <div id="handlerStatus" class="handler-list">
+                                <!-- Handler status will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Quick Actions</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="quick-actions">
+                                <button class="action-btn" onclick="clearHistory()">
+                                    <i class="fas fa-trash"></i>
+                                    Clear History
+                                </button>
+                                <button class="action-btn" onclick="exportData()">
+                                    <i class="fas fa-download"></i>
+                                    Export Data
+                                </button>
+                                <button class="action-btn" onclick="showPage('settings')">
+                                    <i class="fas fa-cog"></i>
+                                    Settings
+                                </button>
+                                <button class="action-btn" onclick="restartApp()">
+                                    <i class="fas fa-redo"></i>
+                                    Restart App
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Page (placeholder) -->
+            <div id="history-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Clipboard History</h3>
+                        <div class="search-container">
+                            <input type="text" placeholder="Search clipboard items..." id="historySearch">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div id="historyList" class="history-container">
+                            <!-- History items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Handlers Page (placeholder) -->
+            <div id="handlers-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Content Handlers Configuration</h3>
+                    </div>
+                    <div class="card-content">
+                        <div id="handlersList" class="handlers-container">
+                            <!-- Handlers configuration will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync Page (placeholder) -->
+            <div id="sync-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Synchronization Settings</h3>
+                    </div>
+                    <div class="card-content">
+                        <div id="syncConfiguration" class="sync-container">
+                            <!-- Sync configuration will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page (placeholder) -->
+            <div id="settings-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Application Settings</h3>
+                    </div>
+                    <div class="card-content">
+                        <div id="settingsForm" class="settings-container">
+                            <!-- Settings form will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Page (placeholder) -->
+            <div id="statistics-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Usage Statistics</h3>
+                    </div>
+                    <div class="card-content">
+                        <div id="statisticsCharts" class="statistics-container">
+                            <!-- Statistics charts will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="main-window.js"></script>
+</body>
+</html>

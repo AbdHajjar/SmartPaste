@@ -1,10 +1,14 @@
-name: GitHub Pages
+name: 📄 GitHub Pages
 
 on:
   push:
     branches: [ main ]
-    paths: [ 'docs/**' ]
+    paths: [ 'docs/**', 'README.md', '.github/workflows/pages.yml' ]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["🚀 Build & Release All Platforms"]
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -16,26 +20,427 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-pages:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Build GitHub Pages site
+        run: |
+          mkdir -p _site
+          
+          # Copy existing docs if available
+          if [ -d "docs" ]; then
+            cp -r docs/* _site/
+          fi
+          
+          # Create professional landing page
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>SmartPaste - Intelligent Clipboard Assistant</title>
+              <meta name="description" content="Transform your clipboard into an AI-powered productivity tool across all platforms">
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+              <style>
+                  :root {
+                      --primary: #007acc;
+                      --secondary: #f8f9fa;
+                      --accent: #28a745;
+                      --dark: #343a40;
+                      --light: #ffffff;
+                  }
+                  
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      line-height: 1.6;
+                      color: var(--dark);
+                  }
+                  
+                  .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+                  
+                  header {
+                      background: var(--light);
+                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                      position: fixed;
+                      width: 100%;
+                      top: 0;
+                      z-index: 1000;
+                  }
+                  
+                  nav {
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      padding: 1rem 0;
+                  }
+                  
+                  .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+                  .nav-links { display: flex; gap: 2rem; }
+                  .nav-links a { text-decoration: none; color: var(--dark); font-weight: 500; }
+                  
+                  main { margin-top: 80px; }
+                  
+                  .hero {
+                      background: linear-gradient(135deg, var(--primary), #0056b3);
+                      color: var(--light);
+                      text-align: center;
+                      padding: 6rem 0;
+                  }
+                  
+                  .hero h1 { font-size: 3.5rem; margin-bottom: 1rem; }
+                  .hero p { font-size: 1.3rem; margin-bottom: 2rem; opacity: 0.9; }
+                  
+                  .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+                  
+                  .btn {
+                      display: inline-block;
+                      padding: 15px 30px;
+                      border-radius: 8px;
+                      text-decoration: none;
+                      font-weight: 600;
+                      transition: all 0.3s;
+                      border: none;
+                      cursor: pointer;
+                      font-size: 1rem;
+                  }
+                  
+                  .btn-primary { background: var(--light); color: var(--primary); }
+                  .btn-secondary { background: transparent; color: var(--light); border: 2px solid var(--light); }
+                  .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+                  
+                  .download-section {
+                      padding: 5rem 0;
+                      background: var(--secondary);
+                  }
+                  
+                  .section-title {
+                      text-align: center;
+                      font-size: 2.5rem;
+                      margin-bottom: 3rem;
+                      color: var(--dark);
+                  }
+                  
+                  .download-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                      gap: 2rem;
+                      margin-bottom: 3rem;
+                  }
+                  
+                  .download-card {
+                      background: var(--light);
+                      border-radius: 12px;
+                      padding: 2.5rem;
+                      text-align: center;
+                      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+                      transition: transform 0.3s;
+                  }
+                  
+                  .download-card:hover { transform: translateY(-5px); }
+                  .download-card i { font-size: 3rem; color: var(--primary); margin-bottom: 1rem; }
+                  .download-card h3 { margin-bottom: 0.5rem; font-size: 1.3rem; }
+                  .download-card p { color: #666; margin-bottom: 2rem; }
+                  
+                  .download-buttons { display: flex; flex-direction: column; gap: 0.5rem; }
+                  .btn-download { background: var(--primary); color: var(--light); }
+                  .btn-download-alt { background: var(--secondary); color: var(--dark); }
+                  
+                  .features-section { padding: 5rem 0; }
+                  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+                  .feature-card { text-align: center; padding: 2rem; }
+                  .feature-card i { font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; }
+                  
+                  .stats-section {
+                      background: var(--primary);
+                      color: var(--light);
+                      text-align: center;
+                      padding: 3rem 0;
+                  }
+                  
+                  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
+                  .stat h3 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+                  
+                  footer {
+                      background: var(--dark);
+                      color: var(--light);
+                      text-align: center;
+                      padding: 3rem 0;
+                  }
+                  
+                  .footer-links { margin-top: 1rem; }
+                  .footer-links a { color: var(--light); text-decoration: none; margin: 0 1rem; }
+                  
+                  @media (max-width: 768px) {
+                      .hero h1 { font-size: 2.5rem; }
+                      .nav-links { display: none; }
+                      .download-grid { grid-template-columns: 1fr; }
+                  }
+              </style>
+          </head>
+          <body>
+              <header>
+                  <nav class="container">
+                      <div class="logo">
+                          <i class="fas fa-clipboard"></i> SmartPaste
+                      </div>
+                      <div class="nav-links">
+                          <a href="#download">Download</a>
+                          <a href="#features">Features</a>
+                          <a href="https://github.com/AbdHajjar/SmartPaste">GitHub</a>
+                          <a href="https://github.com/AbdHajjar/SmartPaste/blob/main/README.md">Docs</a>
+                      </div>
+                  </nav>
+              </header>
+              
+              <main>
+                  <section class="hero">
+                      <div class="container">
+                          <h1>SmartPaste</h1>
+                          <p>Intelligent clipboard assistant that transforms your copy-paste workflow with AI-powered analysis</p>
+                          <div class="hero-buttons">
+                              <a href="#download" class="btn btn-primary">
+                                  <i class="fas fa-download"></i> Download Now
+                              </a>
+                              <a href="https://github.com/AbdHajjar/SmartPaste" class="btn btn-secondary">
+                                  <i class="fab fa-github"></i> View Source
+                              </a>
+                          </div>
+                      </div>
+                  </section>
+                  
+                  <section class="stats-section">
+                      <div class="container">
+                          <div class="stats-grid">
+                              <div class="stat">
+                                  <h3>5+</h3>
+                                  <p>Platforms Supported</p>
+                              </div>
+                              <div class="stat">
+                                  <h3>10+</h3>
+                                  <p>Content Types</p>
+                              </div>
+                              <div class="stat">
+                                  <h3>Open</h3>
+                                  <p>Source & Free</p>
+                              </div>
+                              <div class="stat">
+                                  <h3>AI</h3>
+                                  <p>Powered Analysis</p>
+                              </div>
+                          </div>
+                      </div>
+                  </section>
+                  
+                  <section id="download" class="download-section">
+                      <div class="container">
+                          <h2 class="section-title">Download SmartPaste</h2>
+                          <div class="download-grid">
+                              <div class="download-card">
+                                  <i class="fab fa-windows"></i>
+                                  <h3>Windows</h3>
+                                  <p>Windows 10/11 (x64)</p>
+                                  <div class="download-buttons">
+                                      <a href="https://github.com/AbdHajjar/SmartPaste/releases/latest" class="btn btn-download">
+                                          <i class="fas fa-download"></i> Download for Windows
+                                      </a>
+                                      <small>Installer & Portable versions available</small>
+                                  </div>
+                              </div>
+                              
+                              <div class="download-card">
+                                  <i class="fab fa-apple"></i>
+                                  <h3>macOS</h3>
+                                  <p>macOS 10.15+ (Universal)</p>
+                                  <div class="download-buttons">
+                                      <a href="https://github.com/AbdHajjar/SmartPaste/releases/latest" class="btn btn-download">
+                                          <i class="fas fa-download"></i> Download for macOS
+                                      </a>
+                                      <small>DMG & App Bundle formats</small>
+                                  </div>
+                              </div>
+                              
+                              <div class="download-card">
+                                  <i class="fab fa-linux"></i>
+                                  <h3>Linux</h3>
+                                  <p>Ubuntu/Debian/Fedora (x64)</p>
+                                  <div class="download-buttons">
+                                      <a href="https://github.com/AbdHajjar/SmartPaste/releases/latest" class="btn btn-download">
+                                          <i class="fas fa-download"></i> Download for Linux
+                                      </a>
+                                      <small>AppImage, DEB, RPM packages</small>
+                                  </div>
+                              </div>
+                              
+                              <div class="download-card">
+                                  <i class="fab fa-python"></i>
+                                  <h3>Python Package</h3>
+                                  <p>pip install smartpaste-ai</p>
+                                  <div class="download-buttons">
+                                      <a href="https://pypi.org/project/smartpaste-ai/" class="btn btn-download">
+                                          <i class="fab fa-python"></i> Install from PyPI
+                                      </a>
+                                      <small>Cross-platform Python library</small>
+                                  </div>
+                              </div>
+                              
+                              <div class="download-card">
+                                  <i class="fas fa-mobile-alt"></i>
+                                  <h3>Mobile Web</h3>
+                                  <p>iOS/Android Browser</p>
+                                  <div class="download-buttons">
+                                      <a href="mobile-web/" class="btn btn-download">
+                                          <i class="fas fa-globe"></i> Open Mobile App
+                                      </a>
+                                      <small>Progressive Web App</small>
+                                  </div>
+                              </div>
+                              
+                              <div class="download-card">
+                                  <i class="fas fa-code"></i>
+                                  <h3>Source Code</h3>
+                                  <p>Build from source</p>
+                                  <div class="download-buttons">
+                                      <a href="https://github.com/AbdHajjar/SmartPaste" class="btn btn-download">
+                                          <i class="fab fa-github"></i> Clone Repository
+                                      </a>
+                                      <small>MIT License, fully open source</small>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </section>
+                  
+                  <section id="features" class="features-section">
+                      <div class="container">
+                          <h2 class="section-title">Features</h2>
+                          <div class="features-grid">
+                              <div class="feature-card">
+                                  <i class="fas fa-link"></i>
+                                  <h3>URL Enhancement</h3>
+                                  <p>Automatically extract titles, summaries, and keywords from web links</p>
+                              </div>
+                              <div class="feature-card">
+                                  <i class="fas fa-calculator"></i>
+                                  <h3>Unit Conversion</h3>
+                                  <p>Convert temperatures, measurements, and currencies automatically</p>
+                              </div>
+                              <div class="feature-card">
+                                  <i class="fas fa-language"></i>
+                                  <h3>Text Analysis</h3>
+                                  <p>Language detection, summarization, and intelligent processing</p>
+                              </div>
+                              <div class="feature-card">
+                                  <i class="fas fa-image"></i>
+                                  <h3>OCR Processing</h3>
+                                  <p>Extract text from images using advanced OCR technology</p>
+                              </div>
+                              <div class="feature-card">
+                                  <i class="fas fa-code"></i>
+                                  <h3>Code Enhancement</h3>
+                                  <p>Syntax highlighting, formatting, and language detection for code</p>
+                              </div>
+                              <div class="feature-card">
+                                  <i class="fas fa-sync"></i>
+                                  <h3>Cross-Platform</h3>
+                                  <p>Seamless experience across Windows, macOS, Linux, and mobile</p>
+                              </div>
+                          </div>
+                      </div>
+                  </section>
+              </main>
+              
+              <footer>
+                  <div class="container">
+                      <p>&copy; 2025 SmartPaste. Open source under MIT License.</p>
+                      <div class="footer-links">
+                          <a href="https://github.com/AbdHajjar/SmartPaste">GitHub</a>
+                          <a href="https://github.com/AbdHajjar/SmartPaste/issues">Support</a>
+                          <a href="https://github.com/AbdHajjar/SmartPaste/blob/main/README.md">Documentation</a>
+                          <a href="https://github.com/AbdHajjar/SmartPaste/releases">Releases</a>
+                      </div>
+                  </div>
+              </footer>
+          </body>
+          </html>
+          EOF
+          
+          # Copy mobile web app if it exists
+          if [ -f "mobile/device-test.html" ]; then
+            mkdir -p _site/mobile-web
+            cp mobile/device-test.html _site/mobile-web/index.html
+            echo "Mobile web app copied to GitHub Pages"
+          fi
+          
+          # Create download page with release links
+          cat > _site/download.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>SmartPaste Downloads</title>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                  body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 2rem; }
+                  .download-item { margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
+                  .btn { background: #007acc; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; }
+              </style>
+          </head>
+          <body>
+              <h1>SmartPaste Downloads</h1>
+              <p>Download the latest version of SmartPaste for your platform.</p>
+              
+              <div class="download-item">
+                  <h3>🖥️ Desktop Applications</h3>
+                  <p>Native desktop apps for Windows, macOS, and Linux</p>
+                  <a href="https://github.com/AbdHajjar/SmartPaste/releases/latest" class="btn">Download Desktop Apps</a>
+              </div>
+              
+              <div class="download-item">
+                  <h3>📱 Mobile Web App</h3>
+                  <p>Progressive web app for mobile devices</p>
+                  <a href="mobile-web/" class="btn">Open Mobile App</a>
+              </div>
+              
+              <div class="download-item">
+                  <h3>🐍 Python Package</h3>
+                  <p>Install via pip: <code>pip install smartpaste-ai</code></p>
+                  <a href="https://pypi.org/project/smartpaste-ai/" class="btn">View on PyPI</a>
+              </div>
+              
+              <div class="download-item">
+                  <h3>💻 Source Code</h3>
+                  <p>Build from source or contribute to the project</p>
+                  <a href="https://github.com/AbdHajjar/SmartPaste" class="btn">View on GitHub</a>
+              </div>
+          </body>
+          </html>
+          EOF
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs'
+          path: '_site'
   
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-pages
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
