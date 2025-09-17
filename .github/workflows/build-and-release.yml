@@ -85,7 +85,7 @@ jobs:
           ~/.cache/electron
           ~/.cache/electron-builder
           ${{ runner.temp }}/electron-builder-cache
-        key: ${{ runner.os }}-electron-${{ hashFiles('desktop/package-lock.json') }}
+        key: ${{ runner.os }}-electron-${{ hashFiles('desktop/package.json') }}
         restore-keys: |
           ${{ runner.os }}-electron-
     
@@ -94,7 +94,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: desktop/package-lock.json
+        cache-dependency-path: desktop/package.json
     
     - name: Install dependencies (with cache)
       run: |
@@ -166,7 +166,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: mobile/package-lock.json
+        cache-dependency-path: mobile/package.json
     
     - name: Setup Java for Android
       uses: actions/setup-java@v4
@@ -187,7 +187,7 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
           ~/Library/Developer/Xcode/DerivedData
-        key: ${{ runner.os }}-mobile-${{ hashFiles('mobile/package-lock.json') }}
+        key: ${{ runner.os }}-mobile-${{ hashFiles('mobile/package.json') }}
         restore-keys: |
           ${{ runner.os }}-mobile-
     

@@ -104,6 +104,15 @@ export interface CustomProviderConfig {
   credentials?: any;
 }
 
+// Import sync provider implementations
+import { 
+  FirebaseSyncProvider, 
+  AWSSyncProvider, 
+  AzureSyncProvider, 
+  LocalNetworkSyncProvider, 
+  CustomSyncProvider 
+} from './SyncProviders';
+
 export class SyncCore {
   private config: SyncConfig;
   private state: SyncState;

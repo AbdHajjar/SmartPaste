@@ -38,7 +38,7 @@ jobs:
         path: |
           ~/.npm
           node_modules
-        key: ${{ runner.os }}-${{ matrix.component }}-${{ hashFiles(format('{0}/package-lock.json', matrix.component)) }}
+        key: ${{ runner.os }}-${{ matrix.component }}-${{ hashFiles(format('{0}/package.json', matrix.component)) }}
         restore-keys: |
           ${{ runner.os }}-${{ matrix.component }}-
     
@@ -48,7 +48,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: ${{ matrix.component }}/package-lock.json
+        cache-dependency-path: ${{ matrix.component }}/package.json
     
     - name: Setup Python
       if: matrix.component == 'python'

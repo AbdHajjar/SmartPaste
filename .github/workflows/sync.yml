@@ -60,7 +60,7 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: 'desktop/package-lock.json'
+        cache-dependency-path: 'desktop/package.json'
         
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -105,7 +105,7 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: 'mobile/package-lock.json'
+        cache-dependency-path: 'mobile/package.json'
         
     - name: Install mobile dependencies
       working-directory: mobile
@@ -249,7 +249,7 @@ jobs:
         cat tests/performance/results.json >> performance-report.txt
         
     - name: Upload performance results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-results
         path: performance-report.txt
@@ -296,10 +296,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Run security scan
-      uses: securecodewarrior/github-action-add-sarif@v1
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
       with:
-        sarif-file: security-scan-results.sarif
+        languages: typescript
+        
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
         
     - name: Run dependency check
       run: |
@@ -344,7 +347,7 @@ jobs:
         echo "Generated on: $(date)" >> integration-report.md
         
     - name: Upload integration report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: integration-report
         path: integration-report.md
