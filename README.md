@@ -17,15 +17,16 @@ A comprehensive, multi-platform solution that transforms how you work with clipb
 
 <div align="center">
 
-### 📱 [**Try Mobile Web App**](https://abdhajjar.github.io/SmartPaste/mobile-web/) | 🌐 [**Official Website**](https://abdhajjar.github.io/SmartPaste/)
+### 🌐 [**Official Website**](https://abdhajjar.github.io/SmartPaste/) | 📱 [**Latest Releases**](https://github.com/AbdHajjar/SmartPaste/releases/latest)
 
 | Platform | Download | Install Command |
 |----------|----------|-----------------|
 | 🖥️ **Windows** | [![Windows](https://img.shields.io/badge/Download-Windows-0078d4?style=for-the-badge&logo=windows)](https://github.com/AbdHajjar/SmartPaste/releases/latest) | `winget install SmartPaste` |
 | 🍎 **macOS** | [![macOS](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple)](https://github.com/AbdHajjar/SmartPaste/releases/latest) | `brew install smartpaste` |
 | 🐧 **Linux** | [![Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux)](https://github.com/AbdHajjar/SmartPaste/releases/latest) | `sudo snap install smartpaste` |
+| � **Android** | [![Android](https://img.shields.io/badge/Download-Android-3DDC84?style=for-the-badge&logo=android)](https://github.com/AbdHajjar/SmartPaste/releases/latest) | Install APK directly |
+| 🍎 **iOS** | [![iOS](https://img.shields.io/badge/Download-iOS-000000?style=for-the-badge&logo=apple)](https://github.com/AbdHajjar/SmartPaste/releases/latest) | Install IPA via Xcode |
 | 🐍 **Python** | [![PyPI](https://img.shields.io/badge/Install-PyPI-3776ab?style=for-the-badge&logo=python)](https://pypi.org/project/smartpaste-ai/) | `pip install smartpaste-ai` |
-| 📱 **Mobile** | [![PWA](https://img.shields.io/badge/Open-Web%20App-4285f4?style=for-the-badge&logo=google-chrome)](https://abdhajjar.github.io/SmartPaste/mobile-web/) | Add to Home Screen |
 
 </div>
 
@@ -73,8 +74,8 @@ SmartPaste/
 ## 🚀 Quick Start
 
 ### 🌟 Instant Try - No Installation Required
-**[Try SmartPaste Mobile Web App →](https://abdhajjar.github.io/SmartPaste/mobile-web/)**  
-Test all features instantly in your browser on any device!
+**[Download Latest Release →](https://github.com/AbdHajjar/SmartPaste/releases/latest)**  
+Get native apps for all platforms instantly!
 
 ### 💻 Desktop Installation
 
@@ -100,7 +101,19 @@ sudo snap install smartpaste
 pip install smartpaste-ai
 ```
 
-### 🐍 Python Installation
+### � Mobile Installation
+
+#### Android
+1. Download the `.apk` file from [releases](https://github.com/AbdHajjar/SmartPaste/releases/latest)
+2. Enable "Unknown Sources" in Android settings
+3. Install the APK file
+
+#### iOS
+1. Download the `.ipa` file from [releases](https://github.com/AbdHajjar/SmartPaste/releases/latest)
+2. Install via Xcode or enterprise distribution
+3. Trust the developer certificate in iOS settings
+
+### �🐍 Python Installation
 
 #### From PyPI (Recommended)
 ```bash
@@ -127,15 +140,9 @@ cp config.example.yaml config.yaml
 smartpaste
 ```
 
-### 📱 Mobile Access
-
-1. **Progressive Web App**: Visit [smartpaste.app/mobile](https://abdhajjar.github.io/SmartPaste/mobile-web/) on your phone
-2. **Add to Home Screen**: Tap "Add to Home Screen" for app-like experience
-3. **Offline Support**: Works even without internet connection
-
 ### 🎯 Basic Usage
 
-1. **Start monitoring**: Run `smartpaste` in your terminal
+1. **Start monitoring**: Run `smartpaste` in your terminal or launch the desktop/mobile app
 2. **Copy anything**: URLs, text, numbers with units - SmartPaste handles it all
 3. **Check your files**: Find enriched content in `./smartpaste_data/YYYY-MM-DD.md`
 
@@ -430,9 +437,9 @@ A: Increase `request_timeout` in your config.yaml or check your internet connect
 ### 🔗 Useful Links
 
 - 🏠 [**Project Homepage**](https://abdhajjar.github.io/SmartPaste/) - Official website with downloads
-- 📱 [**Mobile Web App**](https://abdhajjar.github.io/SmartPaste/mobile-web/) - Try instantly in browser
+- 📱 [**Mobile Apps**](https://github.com/AbdHajjar/SmartPaste/releases/latest) - Download APK and IPA files
 - 🐍 [**PyPI Package**](https://pypi.org/project/smartpaste-ai/) - Python package on PyPI
-- 📦 [**Latest Releases**](https://github.com/AbdHajjar/SmartPaste/releases) - Download desktop apps
+- 📦 [**Latest Releases**](https://github.com/AbdHajjar/SmartPaste/releases) - Download desktop and mobile apps
 - 🛠️ [**Development Setup**](https://github.com/AbdHajjar/SmartPaste/blob/main/CONTRIBUTING.md) - For contributors
 
 ## 📄 License

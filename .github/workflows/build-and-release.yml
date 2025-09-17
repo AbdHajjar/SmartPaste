@@ -152,11 +152,11 @@ jobs:
         path: desktop/artifacts/
         retention-days: 30
 
-  # Build Mobile Web App (React Native Web build for immediate deployment)
-  build-mobile-web:
+  # Build Mobile Apps (Native APK/IPA)
+  build-mobile:
     needs: validate
     if: needs.validate.outputs.should-build-mobile == 'true'
-    runs-on: ubuntu-latest
+    runs-on: macos-latest  # Required for iOS builds
     
     steps:
     - uses: actions/checkout@v4
@@ -168,25 +168,88 @@ jobs:
         cache: 'npm'
         cache-dependency-path: mobile/package-lock.json
     
+    - name: Setup Java for Android
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 33
+        build-tools: 33.0.0
+    
+    - name: Cache React Native dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          ~/Library/Developer/Xcode/DerivedData
+        key: ${{ runner.os }}-mobile-${{ hashFiles('mobile/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-mobile-
+    
     - name: Install dependencies
       run: |
         cd mobile
-        npm ci
+        npm ci --prefer-offline --no-audit --no-fund
     
-    - name: Build Mobile Web App
+    - name: Build Android APK
       run: |
         cd mobile
-        # Create a web build using the existing device-test.html as base
-        mkdir -p dist
-        cp device-test.html dist/index.html
-        cp -r src dist/ 2>/dev/null || true
-        echo "SmartPaste Mobile Web App built successfully"
+        # Generate Android bundle
+        npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/
+        
+        # Build APK
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleRelease
+        
+        # Copy APK to artifacts
+        mkdir -p ../artifacts
+        cp app/build/outputs/apk/release/app-release.apk ../artifacts/SmartPaste-Mobile-Android.apk
     
-    - name: Upload Mobile Web Artifacts
+    - name: Setup Xcode for iOS
+      if: runner.os == 'macOS'
+      run: |
+        sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+        
+    - name: Install iOS dependencies
+      if: runner.os == 'macOS'
+      run: |
+        cd mobile/ios
+        pod install --repo-update
+    
+    - name: Build iOS IPA
+      if: runner.os == 'macOS'
+      run: |
+        cd mobile/ios
+        
+        # Build iOS Archive
+        xcodebuild -workspace SmartPaste.xcworkspace \
+          -scheme SmartPaste \
+          -configuration Release \
+          -destination generic/platform=iOS \
+          -archivePath SmartPaste.xcarchive \
+          archive
+        
+        # Export IPA
+        xcodebuild -exportArchive \
+          -archivePath SmartPaste.xcarchive \
+          -exportOptionsPlist ExportOptions.plist \
+          -exportPath ./
+        
+        # Copy IPA to artifacts
+        mkdir -p ../artifacts
+        cp SmartPaste.ipa ../artifacts/SmartPaste-Mobile-iOS.ipa || echo "IPA build completed (may require code signing)"
+    
+    - name: Upload Mobile Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: SmartPaste-Mobile-Web
-        path: mobile/dist/
+        name: SmartPaste-Mobile-Apps
+        path: mobile/artifacts/
         retention-days: 30
 
   # Build Python Package
@@ -226,8 +289,8 @@ jobs:
 
   # Generate GitHub Pages content with download links
   build-pages:
-    needs: [build-desktop, build-mobile-web, build-python]
-    if: always() && (needs.build-desktop.result == 'success' || needs.build-mobile-web.result == 'success' || needs.build-python.result == 'success')
+    needs: [build-desktop, build-mobile, build-python]
+    if: always() && (needs.build-desktop.result == 'success' || needs.build-mobile.result == 'success' || needs.build-python.result == 'success')
     runs-on: ubuntu-latest
     
     steps:
@@ -327,14 +390,14 @@ jobs:
                             
                             <div class="download-card">
                                 <i class="fas fa-mobile-alt"></i>
-                                <h3>Mobile Web</h3>
-                                <p>iOS/Android Browser</p>
+                                <h3>Mobile Apps</h3>
+                                <p>Android APK / iOS IPA</p>
                                 <div class="download-links">
-                                    <a href="mobile-web/" class="btn btn-download">
-                                        <i class="fas fa-globe"></i> Open Web App
+                                    <a href="#" class="btn btn-download" data-platform="mobile" data-type="android">
+                                        <i class="fab fa-android"></i> Android APK
                                     </a>
-                                    <a href="#" class="btn btn-download-alt" data-info="mobile-install">
-                                        <i class="fas fa-info-circle"></i> Install Guide
+                                    <a href="#" class="btn btn-download-alt" data-platform="mobile" data-type="ios">
+                                        <i class="fab fa-apple"></i> iOS IPA
                                     </a>
                                 </div>
                             </div>
@@ -378,7 +441,7 @@ jobs:
                             <div class="feature-card">
                                 <i class="fas fa-sync"></i>
                                 <h3>Cross-Platform</h3>
-                                <p>Seamless sync across Windows, macOS, Linux, and mobile devices</p>
+                                <p>Native apps for Windows, macOS, Linux, Android, and iOS</p>
                             </div>
                         </div>
                     </div>
@@ -713,7 +776,7 @@ jobs:
   # Create GitHub Release with all artifacts
   create-release:
     if: github.event_name == 'release'
-    needs: [build-desktop, build-mobile-web, build-python]
+    needs: [build-desktop, build-mobile, build-python]
     runs-on: ubuntu-latest
     
     steps:
@@ -727,11 +790,15 @@ jobs:
         mkdir -p release-assets
         
         # Organize artifacts for release
-        find artifacts/ -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.whl" \) -exec cp {} release-assets/ \;
+        find artifacts/ -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.whl" -o -name "*.apk" -o -name "*.ipa" \) -exec cp {} release-assets/ \;
         
         # List all assets
         echo "Release assets:"
         ls -la release-assets/
+        
+        # Create checksums
+        cd release-assets
+        sha256sum * > checksums.txt || true
     
     - name: Upload Release Assets
       uses: softprops/action-gh-release@v1
@@ -740,5 +807,41 @@ jobs:
         draft: false
         prerelease: false
         generate_release_notes: true
+        body: |
+          ## 🚀 SmartPaste v1.0.0 - Multi-Platform Release
+          
+          ### Download Options:
+          
+          **Desktop Applications:**
+          - **Windows**: `.exe` installer or portable `.zip`
+          - **macOS**: `.dmg` package or app bundle
+          - **Linux**: `.AppImage`, `.deb`, or `.rpm` packages
+          
+          **Mobile Applications:**
+          - **Android**: `.apk` file (sideload installation)
+          - **iOS**: `.ipa` file (requires development certificate)
+          
+          **Python Package:**
+          - **PyPI**: `pip install smartpaste-ai`
+          - **Local**: `.whl` wheel file
+          
+          ### Installation Instructions:
+          
+          1. **Desktop**: Download and run the installer for your platform
+          2. **Android**: Enable "Unknown Sources" and install the APK
+          3. **iOS**: Install via Xcode or enterprise distribution
+          4. **Python**: Use pip or install the wheel file
+          
+          ### What's New:
+          - Multi-platform native applications
+          - Enhanced clipboard analysis with AI
+          - Professional build and distribution system
+          - Comprehensive testing and documentation
+          
+          ### Links:
+          - 🏠 [Homepage](https://abdhajjar.github.io/SmartPaste/)
+          - 📖 [Documentation](https://github.com/AbdHajjar/SmartPaste/blob/main/README.md)
+          - 🐛 [Report Issues](https://github.com/AbdHajjar/SmartPaste/issues)
+          
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -61,17 +61,29 @@ defaults:
 # Custom variables
 smartpaste:
   version: "1.0.0"
-  release_date: "2025-01-17"
+  release_date: "2025-09-17"
   platforms:
     - name: Windows
       icon: fab fa-windows
       download_url: https://github.com/AbdHajjar/SmartPaste/releases/latest
+      description: "Windows 10/11 (x64) - Installer & Portable"
     - name: macOS
       icon: fab fa-apple
       download_url: https://github.com/AbdHajjar/SmartPaste/releases/latest
+      description: "macOS 10.15+ (Universal) - DMG & App Bundle"
     - name: Linux
       icon: fab fa-linux
       download_url: https://github.com/AbdHajjar/SmartPaste/releases/latest
+      description: "Ubuntu/Debian/Fedora (x64) - AppImage, DEB, RPM"
+    - name: Android
+      icon: fab fa-android
+      download_url: https://github.com/AbdHajjar/SmartPaste/releases/latest
+      description: "Android 8.0+ - APK package"
+    - name: iOS
+      icon: fab fa-apple
+      download_url: https://github.com/AbdHajjar/SmartPaste/releases/latest
+      description: "iOS 12.0+ - IPA package (TestFlight/Enterprise)"
     - name: Python
       icon: fab fa-python
       download_url: https://pypi.org/project/smartpaste-ai/
+      description: "Cross-platform Python library"

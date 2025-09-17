@@ -9,15 +9,15 @@ SMARTPASTE_CODENAME = "Phoenix"
 # Version information for different platforms
 [platforms]
 desktop = "1.0.0"
-mobile = "1.0.0"
+mobile_android = "1.0.0" 
+mobile_ios = "1.0.0"
 python = "1.0.0"
-web = "1.0.0"
 
 # Release information
 [release]
 date = "2025-09-17"
 type = "stable"  # alpha, beta, rc, stable
-notes = "Multi-platform release with desktop, mobile, and Python support"
+notes = "Multi-platform release with desktop, native mobile (Android/iOS), and Python support"
 
 # Build configuration
 [build]

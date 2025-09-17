@@ -296,13 +296,13 @@ jobs:
                               
                               <div class="download-card">
                                   <i class="fas fa-mobile-alt"></i>
-                                  <h3>Mobile Web</h3>
-                                  <p>iOS/Android Browser</p>
+                                  <h3>Mobile Apps</h3>
+                                  <p>Android APK / iOS IPA</p>
                                   <div class="download-buttons">
-                                      <a href="mobile-web/" class="btn btn-download">
-                                          <i class="fas fa-globe"></i> Open Mobile App
+                                      <a href="https://github.com/AbdHajjar/SmartPaste/releases/latest" class="btn btn-download">
+                                          <i class="fab fa-android"></i> Download for Android
                                       </a>
-                                      <small>Progressive Web App</small>
+                                      <small>APK and IPA files available</small>
                                   </div>
                               </div>
                               
@@ -375,11 +375,9 @@ jobs:
           </html>
           EOF
           
-          # Copy mobile web app if it exists
-          if [ -f "mobile/device-test.html" ]; then
-            mkdir -p _site/mobile-web
-            cp mobile/device-test.html _site/mobile-web/index.html
-            echo "Mobile web app copied to GitHub Pages"
+          # Copy documentation files if they exist
+          if [ -f "docs/index.html" ]; then
+            cp docs/* _site/ 2>/dev/null || true
           fi
           
           # Create download page with release links
