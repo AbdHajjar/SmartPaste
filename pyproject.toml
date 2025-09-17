@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "smartpaste"
+name = "smartpaste-ai"
 version = "1.0.0"
 description = "A context-aware AI clipboard assistant that enriches content and saves organized markdown files"
 readme = "README.md"

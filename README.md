@@ -27,8 +27,8 @@ All processed content is automatically saved to organized daily markdown files, 
 #### Option 1: Install from PyPI (Recommended)
 
 ```bash
-# Install SmartPaste
-pip install smartpaste
+# Install SmartPaste AI
+pip install smartpaste-ai
 
 # Create configuration file
 smartpaste --help  # This will show you where to place config.yaml
@@ -146,7 +146,7 @@ text_handler:
 - **scikit-learn** - Machine learning utilities
 
 ### Optional Dependencies
-- **pytesseract** - OCR functionality (install with `pip install smartpaste[ocr]`)
+- **pytesseract** - OCR functionality (install with `pip install smartpaste-ai[ocr]`)
 - **pillow** - Image processing
 
 ### Development Dependencies
@@ -332,7 +332,7 @@ Auto-generated clipboard content analysis.
 A: Check that no other applications are blocking clipboard access. Try running as administrator (Windows) or granting accessibility permissions (macOS).
 
 **Q: OCR isn't working**
-A: Install Tesseract OCR: `pip install smartpaste[ocr]` and ensure Tesseract is in your system PATH.
+A: Install Tesseract OCR: `pip install smartpaste-ai[ocr]` and ensure Tesseract is in your system PATH.
 
 **Q: Language detection is incorrect**
 A: Language detection works best with longer text samples (50+ characters). Short texts may be misidentified.
