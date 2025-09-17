@@ -12,9 +12,23 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 def read_file(filename):
-    """Read content from file"""
-    with open(os.path.join(os.path.dirname(__file__), filename), 'r', encoding='utf-8') as f:
-        return f.read()
+    """Read content from file with robust path handling"""
+    # First try the local file
+    filepath = os.path.join(os.path.dirname(__file__), filename)
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return f.read()
+    
+    # Then try the parent directory
+    filepath = os.path.join(os.path.dirname(__file__), '..', filename)
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return f.read()
+    
+    # Return default description if README not found
+    if 'README' in filename:
+        return "SmartPaste - Intelligent clipboard assistant with AI-powered content analysis and cross-device synchronization"
+    return ""
 
 # Core dependencies for the library
 CORE_DEPS = [
@@ -49,7 +63,7 @@ setup(
     name='smartpaste-core',
     version='1.0.0',
     description='Intelligent clipboard content analysis and enrichment library',
-    long_description=read_file('../README.md'),
+    long_description=read_file('README.md'),
     long_description_content_type='text/markdown',
     author='SmartPaste Team',
     author_email='contact@smartpaste.ai',

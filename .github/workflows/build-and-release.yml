@@ -108,6 +108,7 @@ jobs:
       env:
         NODE_ENV: production
         ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder-cache
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Package artifacts
       shell: bash
@@ -176,9 +177,6 @@ jobs:
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        api-level: 33
-        build-tools: 33.0.0
     
     - name: Cache React Native dependencies
       uses: actions/cache@v3
@@ -274,11 +272,10 @@ jobs:
     
     - name: Build Python package
       run: |
+        # Copy README.md to python-lib directory for proper packaging
+        cp README.md python-lib/README.md
         cd python-lib
         python -m build
-        
-        # Create additional distribution formats
-        python setup.py sdist bdist_wheel
     
     - name: Upload Python Artifacts
       uses: actions/upload-artifact@v4
